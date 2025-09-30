@@ -1,0 +1,94 @@
+.filter {
+  position: relative;
+}
+
+.filter .btnFilter {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 100%;
+  margin-left: 0;
+  padding: 5px 15px;
+  border-radius: 5px;
+  color: #444;
+  border: 1px solid #ccc;
+  background-color: white;
+}
+
+.filter .btnFilter img {
+  width: 20px;
+  height: 20px;
+  filter: brightness(0);
+}
+
+.filter .btnFilter:hover {
+  outline: 1px solid var(--border);
+}
+
+.filter .btnFilter:focus {
+  outline: 4px solid var(--border);
+}
+
+.filter .btnFilter:active {
+  background-color: #0002;
+  outline: 1px solid var(--border);
+}
+
+.filterContainer {
+  position: absolute;
+  z-index: 2000;
+  top: 45px;
+  left: 0px;
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px;
+  flex-direction: column;
+  width: 350px;
+  border-radius: 5px;
+  border: 1px solid var(--border-color);
+  background-color: white;
+}
+
+.filterContainer button {
+  text-align: center;
+  margin-left: 0;
+}
+
+.signal {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, min-content);
+  padding: 10px 15px;
+  outline: 1px solid var(--border);
+  border-radius: 5px;
+}
+
+.signal span {
+  grid-column: 1 / 4;
+}
+
+.signal .state1,
+.signal .state2,
+.signal .state3 {
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+}
+
+.signal .state1 {
+  background-color: green;
+}
+
+.signal .state2 {
+  background-color: yellow;
+}
+
+.signal .state3 {
+  background-color: red;
+}
+
+.signal .selected {
+  outline: 4px solid grey;
+}

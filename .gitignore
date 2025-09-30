@@ -1,0 +1,15 @@
+
+# FOLDERS
+node_modules
+build
+dist
+uploads
+
+# ENV
+.env
+.env.development
+.env.production
+
+
+# PACKAGE AND LOGS
+package-lock.json
