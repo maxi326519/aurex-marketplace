@@ -5,7 +5,7 @@ import useOrderManagement from "../../hooks/Dashboard/orders/useOrderManagement"
 
 import Table from "../../components/Dashboard/Table/Table";
 import Footer from "../../components/Marketplace/Footer";
-import Header from "../../components/Marketplace/Header";
+import Header from "../../components/Marketplace/Headers/Header";
 
 const statusColors = {
   [OrdersStatus.PENDING]: "bg-yellow-100 text-yellow-800",

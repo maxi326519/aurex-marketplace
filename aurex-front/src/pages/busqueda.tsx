@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import useMarketplacePosts from "../hooks/Store/useMarketplacePostsHook";
 
 import Footer from "../components/Marketplace/Footer";
-import Header from "../components/Marketplace/Header";
+import Header from "../components/Marketplace/Headers/Header";
 import ProductCard from "../components/Marketplace/ProductCard";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Inputs/Input";

@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
-import Header from "../../components/Marketplace/Header";
+import Header from "../../components/Marketplace/Headers/Header";
 import Footer from "../../components/Marketplace/Footer";
 import Input from "../../components/ui/Inputs/Input";
 import Button from "../../components/ui/Button";

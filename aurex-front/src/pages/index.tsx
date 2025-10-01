@@ -3,7 +3,7 @@ import { useState } from "react";
 import BrandCard from "../components/Marketplace/BrandCard";
 import CategoryButton from "../components/Marketplace/CategroyButtor";
 import Footer from "../components/Marketplace/Footer";
-import Header from "../components/Marketplace/Header";
+import Header from "../components/Marketplace/Headers/Header";
 import HorizontalScroll from "../components/Marketplace/HorizontalScroll";
 import Newsletter from "../components/Marketplace/Newsletter";
 import ProductCard from "../components/Marketplace/ProductCard";
@@ -28,6 +28,7 @@ import news4 from "../assets/img/news/IMG-20250820-WA0014.jpg";
 import img1 from "../assets/img/IMG-20250820-WA0015.jpg";
 import img2 from "../assets/img/IMG-20250820-WA0016.jpg";
 import img3 from "../assets/img/IMG-20250820-WA0017.jpg";
+import { Post } from "../interfaces/Posts";
 
 const categories = [
   { img: category1, name: "Baños" },
@@ -58,13 +59,109 @@ const categoriesRecomended = [
   "SEGURIDAD",
 ];
 
-const products = [
-  { title: "Producto 1", price: 999.99, image: "P1", discount: 15 },
-  { title: "Producto 2", price: 499.99, image: "P2" },
-  { title: "Producto 3", price: 799.99, image: "P3", discount: 20 },
-  { title: "Producto 4", price: 1299.99, image: "P4" },
-  { title: "Producto 5", price: 299.99, image: "P5", discount: 10 },
+const products: Post[] = [
+  {
+    id: "1",
+    date: new Date(),
+    title: "Producto 1",
+    content: "Descripción del producto 1",
+    price: 999.99,
+    clicks: 0,
+    images: ["P1"],
+    sixInstallments: true,
+    twelveInstallments: false,
+    brand: "Marca A",
+    model: "Modelo 1",
+    type: "Electrónico",
+    color: "Negro",
+    volume: "1L",
+    dimensions: "10x10x5cm",
+    otherFeatures: [],
+    faq: [],
+    status: "Publicado"
+  },
+  {
+    id: "2",
+    date: new Date(),
+    title: "Producto 2",
+    content: "Descripción del producto 2",
+    price: 499.99,
+    clicks: 0,
+    images: ["P2"],
+    sixInstallments: false,
+    twelveInstallments: true,
+    brand: "Marca B",
+    model: "Modelo 2",
+    type: "Hogar",
+    color: "Blanco",
+    volume: "2L",
+    dimensions: "15x15x8cm",
+    otherFeatures: [],
+    faq: [],
+    status: "Publicado"
+  },
+  {
+    id: "3",
+    date: new Date(),
+    title: "Producto 3",
+    content: "Descripción del producto 3",
+    price: 799.99,
+    clicks: 0,
+    images: ["P3"],
+    sixInstallments: true,
+    twelveInstallments: true,
+    brand: "Marca C",
+    model: "Modelo 3",
+    type: "Deportivo",
+    color: "Azul",
+    volume: "0.5L",
+    dimensions: "8x8x3cm",
+    otherFeatures: [],
+    faq: [],
+    status: "Publicado"
+  },
+  {
+    id: "4",
+    date: new Date(),
+    title: "Producto 4",
+    content: "Descripción del producto 4",
+    price: 1299.99,
+    clicks: 0,
+    images: ["P4"],
+    sixInstallments: false,
+    twelveInstallments: false,
+    brand: "Marca D",
+    model: "Modelo 4",
+    type: "Tecnología",
+    color: "Gris",
+    volume: "3L",
+    dimensions: "20x20x10cm",
+    otherFeatures: [],
+    faq: [],
+    status: "Publicado"
+  },
+  {
+    id: "5",
+    date: new Date(),
+    title: "Producto 5",
+    content: "Descripción del producto 5",
+    price: 299.99,
+    clicks: 0,
+    images: ["P5"],
+    sixInstallments: true,
+    twelveInstallments: false,
+    brand: "Marca E",
+    model: "Modelo 5",
+    type: "Accesorio",
+    color: "Rojo",
+    volume: "0.2L",
+    dimensions: "5x5x2cm",
+    otherFeatures: [],
+    faq: [],
+    status: "Publicado"
+  }
 ];
+
 const brandsRecomended = [
   "APPLE",
   "NIKE",
@@ -161,7 +258,10 @@ function Home() {
           </div>
           <div>
             <div className="relative flex justify-between items-center max-w-[1200px] m-auto p-10">
-              <button className="absolute top-1/2 left-0 p-2 w-10 h-10 rounded-full bg-gray-200">
+              <button
+                title="Anterior"
+                className="absolute top-1/2 left-0 p-2 w-10 h-10 rounded-full bg-gray-200"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5"
@@ -177,7 +277,10 @@ function Home() {
                   />
                 </svg>
               </button>
-              <button className="absolute top-1/2 right-0 p-2 w-10 h-10 rounded-full bg-gray-200">
+              <button
+                title="Siguiente"
+                className="absolute top-1/2 right-0 p-2 w-10 h-10 rounded-full bg-gray-200"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5"
@@ -194,7 +297,20 @@ function Home() {
                 </svg>
               </button>
               {products.slice(0, 4).map((product, index) => (
-                <ProductCard key={index} {...product} />
+                <ProductCard 
+                  post={product} 
+                  key={index} 
+                  title={product.title}
+                  price={product.price}
+                  image={product.images[0] || ""}
+                  description={product.content}
+                  productInfo={{
+                    sku: product.product?.sku,
+                    category: product.product?.category1,
+                    stock: product.product?.totalStock,
+                    status: product.status
+                  }}
+                />
               ))}
             </div>
           </div>
@@ -222,7 +338,10 @@ function Home() {
           <div className="container mx-auto px-4">
             <div>
               <div className="relative flex justify-between items-center max-w-[1200px] m-auto p-10">
-                <button className="absolute top-1/2 left-0 p-2 w-10 h-10 rounded-full bg-gray-200">
+                <button
+                  title="Anterior"
+                  className="absolute top-1/2 left-0 p-2 w-10 h-10 rounded-full bg-gray-200"
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-5 w-5"
@@ -238,7 +357,10 @@ function Home() {
                     />
                   </svg>
                 </button>
-                <button className="absolute top-1/2 right-0 p-2 w-10 h-10 rounded-full bg-gray-200">
+                <button
+                  title="Siguiente"
+                  className="absolute top-1/2 right-0 p-2 w-10 h-10 rounded-full bg-gray-200"
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-5 w-5"
@@ -255,7 +377,20 @@ function Home() {
                   </svg>
                 </button>
                 {products.slice(0, 4).map((product, index) => (
-                  <ProductCard key={index} {...product} />
+                  <ProductCard 
+                    post={product} 
+                    key={index} 
+                    title={product.title}
+                    price={product.price}
+                    image={product.images[0] || ""}
+                    description={product.content}
+                    productInfo={{
+                      sku: product.product?.sku,
+                      category: product.product?.category1,
+                      stock: product.product?.totalStock,
+                      status: product.status
+                    }}
+                  />
                 ))}
               </div>
             </div>

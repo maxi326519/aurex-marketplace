@@ -3,6 +3,9 @@ import axios from "axios";
 
 import Home from "./pages/index";
 import Login from "./pages/login";
+import Register from "./pages/registrarse";
+import CompradorRegister from "./pages/registro/comprador";
+import VendedorRegister from "./pages/registro/vendedor";
 import Cart from "./pages/carrito";
 import Pagos from "./pages/pagos";
 import Search from "./pages/busqueda";
@@ -15,6 +18,7 @@ import ProductsListPage from "./pages/panel/admin/products/lists";
 import ProductsImportsPage from "./pages/panel/admin/products/imports";
 import LocationsPage from "./pages/panel/admin/storage/locations";
 import InventarioPage from "./pages/panel/admin/storage/inventory";
+import OrdersPage from "./pages/panel/admin/orders/orders";
 
 import SellerProfilePage from "./pages/panel/vendedores/perfil";
 import SellerAnaliticsPage from "./pages/panel/vendedores/analitics";
@@ -35,10 +39,6 @@ import ReceptionsHistory from "./pages/panel/admin/recepciones/historial";
 import ReceptionsPending from "./pages/panel/admin/recepciones/pendientes";
 
 import "./App.css";
-import Register from "./pages/register";
-import CompradorRegister from "./pages/registro/comprador";
-import VendedorRegister from "./pages/registro/vendedor";
-import OrdersPage from "./pages/panel/admin/orders/orders";
 
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 

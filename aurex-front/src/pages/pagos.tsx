@@ -1,16 +1,17 @@
+import { Link as LinkIcon, Banknote } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import useCartStore from "../hooks/Store/useCarrito";
 import { useAuth } from "../hooks/Auth/useAuth";
-import Header from "../components/Marketplace/Header";
+import useCartStore from "../hooks/Store/useCarrito";
+
+import Header from "../components/Marketplace/Headers/Header";
 import Footer from "../components/Marketplace/Footer";
 import Button from "../components/ui/Button";
-import { CreditCard, Link as LinkIcon, Banknote } from "lucide-react";
 
 interface PaymentOption {
   id: string;
   userId: string;
-  type: 'link' | 'transferencia';
+  type: "link" | "transferencia";
   link?: string;
   pasarela?: string;
   cvu?: string;
@@ -22,7 +23,12 @@ interface PaymentOption {
 
 export default function Pagos() {
   const navigate = useNavigate();
-  const { items, loading: cartLoading, createOrder, getFirstUserId } = useCartStore();
+  const {
+    items,
+    loading: cartLoading,
+    createOrder,
+    getFirstUserId,
+  } = useCartStore();
   const { getPaymentOptions } = useAuth();
   const [paymentOptions, setPaymentOptions] = useState<PaymentOption[]>([]);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -31,15 +37,18 @@ export default function Pagos() {
   useEffect(() => {
     const loadPaymentOptions = async () => {
       const userId = getFirstUserId();
-      console.log('UserId from first item:', userId);
-      console.log('Items in cart:', items);
+      console.log("UserId from first item:", userId);
+      console.log("Items in cart:", items);
       if (userId) {
         try {
           const opts = await getPaymentOptions(userId);
-          console.log('Payment options received:', opts);
+          console.log("Payment options received:", opts);
           setPaymentOptions(opts);
         } catch (error) {
-          console.error(`Error loading payment options for user ${userId}:`, error);
+          console.error(
+            `Error loading payment options for user ${userId}:`,
+            error
+          );
         }
       }
     };
@@ -64,7 +73,7 @@ export default function Pagos() {
   };
 
   const getTotalAmount = () => {
-    return items.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return items.reduce((total, item) => total + item.price * item.quantity, 0);
   };
 
   if (items.length === 0) {
@@ -73,7 +82,9 @@ export default function Pagos() {
         <Header />
         <div className="flex justify-center items-center py-16">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-600 mb-4">No hay productos en el carrito</h1>
+            <h1 className="text-2xl font-bold text-gray-600 mb-4">
+              No hay productos en el carrito
+            </h1>
             <Button type="primary" onClick={() => navigate("/busqueda")}>
               Ir a Comprar
             </Button>
@@ -99,7 +110,9 @@ export default function Pagos() {
             <div className="space-y-2">
               {items.map((item) => (
                 <div key={item.id} className="flex justify-between">
-                  <span>{item.title} x{item.quantity}</span>
+                  <span>
+                    {item.title} x{item.quantity}
+                  </span>
                   <span>${(item.price * item.quantity).toFixed(2)}</span>
                 </div>
               ))}
@@ -113,7 +126,9 @@ export default function Pagos() {
 
           {/* Opciones de pago */}
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-4">Métodos de Pago Disponibles</h2>
+            <h2 className="text-lg font-semibold mb-4">
+              Métodos de Pago Disponibles
+            </h2>
 
             <div className="space-y-3">
               {paymentOptions.map((option) => (
@@ -127,24 +142,28 @@ export default function Pagos() {
                   onClick={() => setSelectedOption(option.id)}
                 >
                   <div className="flex items-center gap-3">
-                    {option.type === 'link' ? (
+                    {option.type === "link" ? (
                       <LinkIcon size={20} className="text-blue-500" />
                     ) : (
                       <Banknote size={20} className="text-green-500" />
                     )}
                     <div>
-                      <div className="font-medium capitalize">{option.type}</div>
-                      {option.type === 'link' && (
+                      <div className="font-medium capitalize">
+                        {option.type}
+                      </div>
+                      {option.type === "link" && (
                         <div className="text-sm text-gray-600">
                           <p>Link: {option.link}</p>
                           <p>Pasarela: {option.pasarela}</p>
                         </div>
                       )}
-                      {option.type === 'transferencia' && (
+                      {option.type === "transferencia" && (
                         <div className="text-sm text-gray-600">
                           <p>CVU: {option.cvu}</p>
                           <p>CBU: {option.cbu}</p>
-                          {option.otrosDatos && <p>Otros: {option.otrosDatos}</p>}
+                          {option.otrosDatos && (
+                            <p>Otros: {option.otrosDatos}</p>
+                          )}
                         </div>
                       )}
                     </div>

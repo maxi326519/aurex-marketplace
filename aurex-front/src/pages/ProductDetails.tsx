@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Post } from "../interfaces/Posts";
 import usePosts from "../hooks/Dashboard/posts/usePosts";
 import useCartStore from "../hooks/Store/useCarrito";
-import Header from "../components/Marketplace/Header";
+import Header from "../components/Marketplace/Headers/Header";
 import Footer from "../components/Marketplace/Footer";
 
 // Imágenes de stock para testing

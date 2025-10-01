@@ -16,6 +16,7 @@ export interface User {
 }
 
 export enum UserRol {
+  ANY = "",
   ADMIN = "Administrador",
   DISPACHER = "Despachador",
   SELLER = "Vendedor",

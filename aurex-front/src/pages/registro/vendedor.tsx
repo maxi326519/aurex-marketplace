@@ -1,45 +1,52 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useAuth } from "../../hooks/Auth/useAuth";
+import {
+  initVendedorRegistration,
+  VendedorRegistrationData,
+} from "../../interfaces/Users";
 
-import Header from "../../components/Marketplace/Header";
+import Header from "../../components/Marketplace/Headers/Header";
 import Footer from "../../components/Marketplace/Footer";
 import Input from "../../components/ui/Inputs/Input";
 import Button from "../../components/ui/Button";
-import { useAuth } from "../../hooks/Auth/useAuth";
-import { initVendedorRegistration, VendedorRegistrationData } from "../../interfaces/Users";
 
 export default function VendedorRegister() {
   const navigate = useNavigate();
   const { completeVendedorRegistration, loading } = useAuth();
-  const [formData, setFormData] = useState<VendedorRegistrationData>(initVendedorRegistration());
+  const [formData, setFormData] = useState<VendedorRegistrationData>(
+    initVendedorRegistration()
+  );
   const [error, setError] = useState<string>("");
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    
+
     try {
       await completeVendedorRegistration(formData);
       navigate("/panel/vendedor/analiticas");
     } catch (error) {
       console.error("Error al completar registro:", error);
-      setError(error instanceof Error ? error.message : "Error al completar registro");
+      setError(
+        error instanceof Error ? error.message : "Error al completar registro"
+      );
     }
   };
 
@@ -58,17 +65,19 @@ export default function VendedorRegister() {
           <p className="text-gray-600 text-center mb-6">
             Configura tu tienda y comienza a vender en nuestra plataforma
           </p>
-          
+
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
               {error}
             </div>
           )}
-          
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Información personal */}
             <div className="border-b pb-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-700">Información Personal</h2>
+              <h2 className="text-lg font-semibold mb-4 text-gray-700">
+                Información Personal
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
                   name="name"
@@ -76,7 +85,7 @@ export default function VendedorRegister() {
                   value={formData.name}
                   onChange={handleInputChange}
                 />
-                
+
                 <Input
                   name="phone"
                   label="Teléfono"
@@ -89,7 +98,9 @@ export default function VendedorRegister() {
 
             {/* Información del negocio */}
             <div className="border-b pb-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-700">Información del Negocio</h2>
+              <h2 className="text-lg font-semibold mb-4 text-gray-700">
+                Información del Negocio
+              </h2>
               <div className="space-y-4">
                 <Input
                   name="businessName"
@@ -97,14 +108,14 @@ export default function VendedorRegister() {
                   value={formData.businessName}
                   onChange={handleInputChange}
                 />
-                
+
                 <Input
                   name="businessType"
                   label="Tipo de negocio"
                   value={formData.businessType}
                   onChange={handleInputChange}
                 />
-                
+
                 <div className="relative flex flex-col overflow-hidden">
                   <label
                     htmlFor="businessDescription"
@@ -126,7 +137,9 @@ export default function VendedorRegister() {
 
             {/* Dirección */}
             <div className="border-b pb-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-700">Dirección</h2>
+              <h2 className="text-lg font-semibold mb-4 text-gray-700">
+                Dirección
+              </h2>
               <div className="space-y-4">
                 <Input
                   name="address"
@@ -134,7 +147,7 @@ export default function VendedorRegister() {
                   value={formData.address}
                   onChange={handleInputChange}
                 />
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Input
                     name="city"
@@ -142,14 +155,14 @@ export default function VendedorRegister() {
                     value={formData.city}
                     onChange={handleInputChange}
                   />
-                  
+
                   <Input
                     name="state"
                     label="Estado/Provincia"
                     value={formData.state}
                     onChange={handleInputChange}
                   />
-                  
+
                   <Input
                     name="zipCode"
                     label="Código postal"
@@ -162,7 +175,9 @@ export default function VendedorRegister() {
 
             {/* Información fiscal y bancaria */}
             <div className="pb-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-700">Información Fiscal y Bancaria</h2>
+              <h2 className="text-lg font-semibold mb-4 text-gray-700">
+                Información Fiscal y Bancaria
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
                   name="taxId"
@@ -170,7 +185,7 @@ export default function VendedorRegister() {
                   value={formData.taxId}
                   onChange={handleInputChange}
                 />
-                
+
                 <Input
                   name="bankAccount"
                   label="Cuenta bancaria"
@@ -179,19 +194,19 @@ export default function VendedorRegister() {
                 />
               </div>
             </div>
-            
+
             <div className="flex gap-3 pt-4">
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 className="flex-1"
-                onClick={() => handleSubmit(new Event('submit') as any)}
+                onClick={() => handleSubmit(new Event("submit") as any)}
                 disabled={loading}
               >
                 {loading ? "Completando..." : "Completar registro"}
               </Button>
-              <Button 
-                type="primary" 
-                variant="outline" 
+              <Button
+                type="primary"
+                variant="outline"
                 className="flex-1"
                 onClick={handleSkip}
                 disabled={loading}

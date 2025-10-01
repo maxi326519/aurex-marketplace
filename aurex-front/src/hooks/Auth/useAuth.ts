@@ -13,7 +13,7 @@ import {
 interface PaymentOption {
   id: string;
   userId: string;
-  type: 'link' | 'transferencia';
+  type: "link" | "transferencia";
   link?: string;
   pasarela?: string;
   cvu?: string;
@@ -43,8 +43,13 @@ interface UseAuth {
   logout: () => Promise<void>;
   reLogin: () => Promise<void>;
   getPaymentOptions: (userId: string) => Promise<PaymentOption[]>;
-  createPaymentOption: (data: Omit<PaymentOption, 'id' | 'createdAt' | 'updatedAt'>) => Promise<PaymentOption>;
-  updatePaymentOption: (id: string, data: Partial<PaymentOption>) => Promise<PaymentOption>;
+  createPaymentOption: (
+    data: Omit<PaymentOption, "id" | "createdAt" | "updatedAt">
+  ) => Promise<PaymentOption>;
+  updatePaymentOption: (
+    id: string,
+    data: Partial<PaymentOption>
+  ) => Promise<PaymentOption>;
   deletePaymentOption: (id: string) => Promise<void>;
 }
 
@@ -60,10 +65,6 @@ export const useAuth = (): UseAuth => {
     setLoading,
     logout: logoutStore,
   } = useAuthStore();
-
-  useEffect(() => {
-    console.log(user, isAuthenticated);
-  }, [user, isAuthenticated]);
 
   const configureAxiosInterceptor = (token: string) => {
     axios.interceptors.request.clear();
@@ -84,14 +85,20 @@ export const useAuth = (): UseAuth => {
         password,
         role,
       });
-      console.log(response);
       if (!response.data?.user) throw new Error("Error to create user");
 
       await login({ email, password });
 
       return response.data.user;
     } catch (error) {
-      console.log(error);
+      console.error("Login error:", error);
+      if (error instanceof AxiosError) {
+        throw new Error(
+          error?.response?.data?.error || error.message || "Login failed"
+        );
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -279,7 +286,9 @@ export const useAuth = (): UseAuth => {
     }
   };
 
-  const getPaymentOptions = async (userId: string): Promise<PaymentOption[]> => {
+  const getPaymentOptions = async (
+    userId: string
+  ): Promise<PaymentOption[]> => {
     try {
       const response = await axios.get(`/payment-options?userId=${userId}`);
       return response.data;
@@ -289,9 +298,11 @@ export const useAuth = (): UseAuth => {
     }
   };
 
-  const createPaymentOption = async (data: Omit<PaymentOption, 'id' | 'createdAt' | 'updatedAt'>): Promise<PaymentOption> => {
+  const createPaymentOption = async (
+    data: Omit<PaymentOption, "id" | "createdAt" | "updatedAt">
+  ): Promise<PaymentOption> => {
     try {
-      const response = await axios.post('/payment-options', data);
+      const response = await axios.post("/payment-options", data);
       return response.data;
     } catch (error) {
       console.error("Error creating payment option:", error);
@@ -299,7 +310,10 @@ export const useAuth = (): UseAuth => {
     }
   };
 
-  const updatePaymentOption = async (id: string, data: Partial<PaymentOption>): Promise<PaymentOption> => {
+  const updatePaymentOption = async (
+    id: string,
+    data: Partial<PaymentOption>
+  ): Promise<PaymentOption> => {
     try {
       const response = await axios.put(`/payment-options/${id}`, data);
       return response.data;

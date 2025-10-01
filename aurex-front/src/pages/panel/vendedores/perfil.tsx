@@ -1,4 +1,7 @@
 import { UserRol, UserStatus } from "../../../interfaces/Users";
+import { useState, useEffect } from "react";
+import { PaymentOption } from "../../../interfaces/PaymentOption";
+import { useAuth } from "../../../hooks/Auth/useAuth";
 import {
   Card,
   CardContent,
@@ -23,8 +26,6 @@ import {
 import DashboardLayout from "../../../components/Dashboard/SellerDashboard";
 import Button from "../../../components/ui/Button";
 import Input from "../../../components/ui/Inputs/Input";
-import { useAuth } from "../../../hooks/Auth/useAuth";
-import { useState, useEffect } from "react";
 
 export interface User {
   id?: string;
@@ -48,27 +49,24 @@ interface AnalyticsData {
   monthlyVisitors: number;
 }
 
-interface PaymentOption {
-  id: string;
-  userId: string;
-  type: 'link' | 'transferencia';
-  link?: string;
-  pasarela?: string;
-  cvu?: string;
-  cbu?: string;
-  otrosDatos?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export default function SellerProfilePage() {
-  const { user, getPaymentOptions, createPaymentOption, updatePaymentOption, deletePaymentOption } = useAuth();
+  const {
+    user,
+    getPaymentOptions,
+    createPaymentOption,
+    updatePaymentOption,
+    deletePaymentOption,
+  } = useAuth();
   const [paymentOptions, setPaymentOptions] = useState<PaymentOption[]>([]);
   const [loading, setLoading] = useState(false);
 
   // Form states
-  const [linkForm, setLinkForm] = useState({ link: '', pasarela: '' });
-  const [transferForm, setTransferForm] = useState({ cvu: '', cbu: '', otrosDatos: '' });
+  const [linkForm, setLinkForm] = useState({ link: "", pasarela: "" });
+  const [transferForm, setTransferForm] = useState({
+    cvu: "",
+    cbu: "",
+    otrosDatos: "",
+  });
 
   useEffect(() => {
     if (user?.id) {
@@ -79,12 +77,12 @@ export default function SellerProfilePage() {
   const loadPaymentOptions = async () => {
     if (!user?.id) return;
     try {
-      console.log('Loading payment options for user:', user.id);
+      console.log("Loading payment options for user:", user.id);
       const options = await getPaymentOptions(user.id);
-      console.log('Payment options loaded:', options);
+      console.log("Payment options loaded:", options);
       setPaymentOptions(options);
     } catch (error) {
-      console.error('Error loading payment options:', error);
+      console.error("Error loading payment options:", error);
     }
   };
 
@@ -92,18 +90,18 @@ export default function SellerProfilePage() {
     if (!user?.id) return;
     setLoading(true);
     try {
-      console.log('Creating link payment option for user:', user.id);
+      console.log("Creating link payment option for user:", user.id);
       await createPaymentOption({
         userId: user.id,
-        type: 'link',
+        type: "link",
         link: linkForm.link,
         pasarela: linkForm.pasarela,
       });
-      console.log('Link payment option created successfully');
-      setLinkForm({ link: '', pasarela: '' });
+      console.log("Link payment option created successfully");
+      setLinkForm({ link: "", pasarela: "" });
       loadPaymentOptions();
     } catch (error) {
-      console.error('Error creating link payment option:', error);
+      console.error("Error creating link payment option:", error);
     } finally {
       setLoading(false);
     }
@@ -115,15 +113,15 @@ export default function SellerProfilePage() {
     try {
       await createPaymentOption({
         userId: user.id,
-        type: 'transferencia',
+        type: "transferencia",
         cvu: transferForm.cvu,
         cbu: transferForm.cbu,
         otrosDatos: transferForm.otrosDatos,
       });
-      setTransferForm({ cvu: '', cbu: '', otrosDatos: '' });
+      setTransferForm({ cvu: "", cbu: "", otrosDatos: "" });
       loadPaymentOptions();
     } catch (error) {
-      console.error('Error creating transfer payment option:', error);
+      console.error("Error creating transfer payment option:", error);
     } finally {
       setLoading(false);
     }
@@ -134,7 +132,7 @@ export default function SellerProfilePage() {
       await deletePaymentOption(id);
       loadPaymentOptions();
     } catch (error) {
-      console.error('Error deleting payment option:', error);
+      console.error("Error deleting payment option:", error);
     }
   };
 
@@ -148,7 +146,11 @@ export default function SellerProfilePage() {
   };
 
   if (!user) {
-    return <DashboardLayout title="Perfil comercial"><div>Cargando...</div></DashboardLayout>;
+    return (
+      <DashboardLayout title="Perfil comercial">
+        <div>Cargando...</div>
+      </DashboardLayout>
+    );
   }
 
   return (
@@ -188,9 +190,7 @@ export default function SellerProfilePage() {
                 <div className="flex items-center gap-1 mt-2">
                   <Star size={16} className="fill-yellow-400 text-yellow-400" />
                   <span className="font-semibold">4.8</span>
-                  <span className="text-gray-500">
-                    (154 ventas)
-                  </span>
+                  <span className="text-gray-500">(154 ventas)</span>
                 </div>
               </div>
 
@@ -223,8 +223,14 @@ export default function SellerProfilePage() {
                 <div key={option.id} className="border rounded p-3">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      {option.type === 'link' ? <LinkIcon size={16} /> : <Banknote size={16} />}
-                      <span className="font-medium capitalize">{option.type}</span>
+                      {option.type === "link" ? (
+                        <LinkIcon size={16} />
+                      ) : (
+                        <Banknote size={16} />
+                      )}
+                      <span className="font-medium capitalize">
+                        {option.type}
+                      </span>
                     </div>
                     <Button
                       type="secondary"
@@ -234,13 +240,13 @@ export default function SellerProfilePage() {
                       Eliminar
                     </Button>
                   </div>
-                  {option.type === 'link' && (
+                  {option.type === "link" && (
                     <div className="mt-2 text-sm">
                       <p>Link: {option.link}</p>
                       <p>Pasarela: {option.pasarela}</p>
                     </div>
                   )}
-                  {option.type === 'transferencia' && (
+                  {option.type === "transferencia" && (
                     <div className="mt-2 text-sm">
                       <p>CVU: {option.cvu}</p>
                       <p>CBU: {option.cbu}</p>
@@ -258,13 +264,20 @@ export default function SellerProfilePage() {
                     name="link"
                     label="Link de pago"
                     value={linkForm.link}
-                    onChange={(e) => setLinkForm(prev => ({ ...prev, link: e.target.value }))}
+                    onChange={(e) =>
+                      setLinkForm((prev) => ({ ...prev, link: e.target.value }))
+                    }
                   />
                   <Input
                     name="pasarela"
                     label="Pasarela de pago"
                     value={linkForm.pasarela}
-                    onChange={(e) => setLinkForm(prev => ({ ...prev, pasarela: e.target.value }))}
+                    onChange={(e) =>
+                      setLinkForm((prev) => ({
+                        ...prev,
+                        pasarela: e.target.value,
+                      }))
+                    }
                   />
                   <Button
                     type="primary"
@@ -279,30 +292,49 @@ export default function SellerProfilePage() {
 
               {/* Formulario Transferencia */}
               <div className="border-t pt-4">
-                <h4 className="font-medium mb-2">Agregar Transferencia/Efectivo</h4>
+                <h4 className="font-medium mb-2">
+                  Agregar Transferencia/Efectivo
+                </h4>
                 <div className="space-y-2">
                   <Input
                     name="cvu"
                     label="CVU"
                     value={transferForm.cvu}
-                    onChange={(e) => setTransferForm(prev => ({ ...prev, cvu: e.target.value }))}
+                    onChange={(e) =>
+                      setTransferForm((prev) => ({
+                        ...prev,
+                        cvu: e.target.value,
+                      }))
+                    }
                   />
                   <Input
                     name="cbu"
                     label="CBU"
                     value={transferForm.cbu}
-                    onChange={(e) => setTransferForm(prev => ({ ...prev, cbu: e.target.value }))}
+                    onChange={(e) =>
+                      setTransferForm((prev) => ({
+                        ...prev,
+                        cbu: e.target.value,
+                      }))
+                    }
                   />
                   <Input
                     name="otrosDatos"
                     label="Otros datos"
                     value={transferForm.otrosDatos}
-                    onChange={(e) => setTransferForm(prev => ({ ...prev, otrosDatos: e.target.value }))}
+                    onChange={(e) =>
+                      setTransferForm((prev) => ({
+                        ...prev,
+                        otrosDatos: e.target.value,
+                      }))
+                    }
                   />
                   <Button
                     type="primary"
                     onClick={handleCreateTransfer}
-                    disabled={loading || (!transferForm.cvu && !transferForm.cbu)}
+                    disabled={
+                      loading || (!transferForm.cvu && !transferForm.cbu)
+                    }
                     className="w-full"
                   >
                     Agregar Transferencia
