@@ -4,6 +4,7 @@ import axios from "axios";
 import Home from "./pages/index";
 import Login from "./pages/login";
 import Cart from "./pages/carrito";
+import Pagos from "./pages/pagos";
 import Search from "./pages/busqueda";
 import ProductDetails from "./pages/ProductDetails";
 
@@ -53,7 +54,8 @@ function App() {
         <Route path="/registrarse" element={<Register />} />
         <Route path="/registro/comprador" element={<CompradorRegister />} />
         <Route path="/registro/vendedor" element={<VendedorRegister />} />
-        <Route path="/cart" element={<Cart />} />
+        <Route path="/carrito" element={<Cart />} />
+        <Route path="/pagos" element={<Pagos />} />
 
         {/* Dashbpoard Admin */}
         <Route path={"/panel/admin/analiticas"} element={<DashboardPage/>} />

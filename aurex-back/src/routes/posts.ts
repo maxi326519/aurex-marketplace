@@ -41,7 +41,7 @@ router.post(
       console.log("Data", req.body);
 
       const data = req.body;
-      // data.userId = req.body.user.id;
+      data.userId = req.body.user.id;
 
       // Validar que se envíe el productId
       if (!data.productId) {

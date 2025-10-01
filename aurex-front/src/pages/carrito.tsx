@@ -27,7 +27,7 @@ export default function Cart() {
   }
 
   async function handleSubmit() {
-    await createOrder();
+    navigate("/pagos");
   }
 
   function handleClearCart() {
@@ -201,7 +201,7 @@ export default function Cart() {
                 disabled={loading}
                 className="w-full"
               >
-                {loading ? "Procesando..." : "Realizar Compra"}
+                {loading ? "Procesando..." : "Proceder al Pago"}
               </Button>
             </div>
           </div>

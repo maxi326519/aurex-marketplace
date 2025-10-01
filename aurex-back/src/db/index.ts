@@ -51,6 +51,7 @@ for (const modelDefiner of modelDefiners) {
 export const {
   Categories,
   Movements,
+  PaymentOptions,
   Product,
   Stock,
   Storage,
@@ -65,8 +66,11 @@ export const {
 User.hasMany(Movements);
 User.hasMany(Reception);
 User.hasOne(Business);
+User.hasMany(Order);
+User.hasMany(PaymentOptions);
 
 Business.belongsTo(User);
+PaymentOptions.belongsTo(User);
 
 Reception.belongsTo(User);
 
@@ -90,6 +94,7 @@ Movements.belongsTo(Storage);
 Movements.belongsTo(Stock);
 Movements.belongsTo(Product);
 
+Order.belongsTo(User);
 Order.hasMany(OrderItem, { foreignKey: "orderId", as: "items" });
 OrderItem.belongsTo(Order, { foreignKey: "orderId" });
 OrderItem.belongsTo(Product, { foreignKey: "productId", as: "product" });

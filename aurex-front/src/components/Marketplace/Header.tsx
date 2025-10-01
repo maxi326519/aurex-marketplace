@@ -103,7 +103,7 @@ const Header = ({ categories = true }: Props) => {
           <button
             type="button"
             className="relative px-10"
-            onClick={() => navigate("/cart")}
+            onClick={() => navigate("/carrito")}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

@@ -10,7 +10,8 @@ interface CartItem {
   price: number;
   image: string;
   description?: string;
-  productId: string;
+  productId?: string;
+  userId?: string;
   quantity: number;
   productInfo?: {
     sku?: string;
@@ -30,6 +31,7 @@ interface CartState {
   getTotalItems: () => number;
   getTotalAmount: () => number;
   createOrder: () => Promise<void>;
+  getFirstUserId: () => string | undefined;
 }
 
 const useCartStore = create<CartState>((set, get) => ({
@@ -52,12 +54,13 @@ const useCartStore = create<CartState>((set, get) => ({
     } else {
       // Si no existe, agregar nuevo item
       const newItem: CartItem = {
-        id: post.id,
+        id: post.id || '',
         title: post.title,
         price: post.price,
         image: post.product?.name || "Producto",
         description: post.content,
         productId: post.productId,
+        userId: post.userId,
         quantity: 1,
         productInfo: {
           sku: post.product?.sku,
@@ -108,7 +111,7 @@ const useCartStore = create<CartState>((set, get) => ({
 
   createOrder: async () => {
     const { items } = get();
-    
+
     if (items.length === 0) {
       Swal.fire("Error", "El carrito está vacío", "error");
       return;
@@ -131,7 +134,7 @@ const useCartStore = create<CartState>((set, get) => ({
       };
 
       const response = await axios.post("/orders", orderData);
-      
+
       if (response.status === 201) {
         Swal.fire("¡Compra realizada!", "Tu orden ha sido creada exitosamente", "success");
         get().clear();
@@ -142,6 +145,11 @@ const useCartStore = create<CartState>((set, get) => ({
     } finally {
       set({ loading: false });
     }
+  },
+
+  getFirstUserId: () => {
+    const { items } = get();
+    return items.length > 0 ? items[0].userId : undefined;
   },
 }));
 

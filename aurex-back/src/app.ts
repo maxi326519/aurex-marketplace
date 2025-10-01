@@ -17,6 +17,7 @@ import movements from "./routes/movements";
 import posts from "./routes/posts";
 import orders from "./routes/orders";
 import business from "./routes/business";
+import paymentOptions from "./routes/paymentOptions";
 import path from "path";
 
 // Ceate app
@@ -56,6 +57,7 @@ app.use("/api/movements", verificarToken, movements);
 app.use("/api/posts", posts);
 app.use("/api/orders", verificarToken, orders);
 app.use("/api/business", verificarToken, business);
+app.use("/api/payment-options", verificarToken, paymentOptions);
 
 // Implementar un protocolo de HTTPS de Security
 // Error catching endware.
