@@ -1,7 +1,7 @@
+import { LoginData, UserRol } from "../interfaces/Users";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../hooks/Auth/useAuth";
-import { LoginData, UserRol } from "../interfaces/Users";
 
 import SesionForm from "../components/Marketplace/SesionForm";
 import Footer from "../components/Marketplace/Footer";

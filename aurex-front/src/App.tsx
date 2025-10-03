@@ -1,4 +1,6 @@
 import { Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import { useAuth } from "./hooks/Auth/useAuth";
 import axios from "axios";
 
 import Home from "./pages/index";
@@ -40,9 +42,16 @@ import ReceptionsPending from "./pages/panel/admin/recepciones/pendientes";
 
 import "./App.css";
 
-axios.defaults.baseURL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+axios.defaults.baseURL =
+  import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
 function App() {
+  const { reLogin } = useAuth();
+
+  useEffect(() => {
+    reLogin();
+  }, []);
+
   return (
     <div className="h-screen bg-white">
       <Routes>
@@ -58,39 +67,89 @@ function App() {
         <Route path="/pagos" element={<Pagos />} />
 
         {/* Dashbpoard Admin */}
-        <Route path={"/panel/admin/analiticas"} element={<DashboardPage/>} />
-        <Route path={"/panel/admin/usuarios"} element={<UsersPage/>} />
-        <Route path={"/panel/admin/vendedores"} element={<SellersPage/>} />
-        <Route path={"/panel/admin/productos/listado"} element={<ProductsListPage/>} />
-        <Route path={"/panel/admin/productos/importacion"} element={<ProductsImportsPage/>} />
-        <Route path={"/panel/admin/almacen/ubicaciones"} element={<LocationsPage/>} />
-        <Route path={"/panel/admin/almacen/inventario"} element={<InventarioPage/>} />
-        <Route path={"/panel/admin/pedidos"} element={<OrdersPage/>} />
+        <Route path={"/panel/admin/analiticas"} element={<DashboardPage />} />
+        <Route path={"/panel/admin/usuarios"} element={<UsersPage />} />
+        <Route path={"/panel/admin/vendedores"} element={<SellersPage />} />
+        <Route
+          path={"/panel/admin/productos/listado"}
+          element={<ProductsListPage />}
+        />
+        <Route
+          path={"/panel/admin/productos/importacion"}
+          element={<ProductsImportsPage />}
+        />
+        <Route
+          path={"/panel/admin/almacen/ubicaciones"}
+          element={<LocationsPage />}
+        />
+        <Route
+          path={"/panel/admin/almacen/inventario"}
+          element={<InventarioPage />}
+        />
+        <Route path={"/panel/admin/pedidos"} element={<OrdersPage />} />
 
-        <Route path={"/panel/admin/recepciones/pendientes"} element={<ReceptionsPending/>}/>
-        <Route path={"/panel/admin/recepciones/aprobados"} element={<ReceptionsApproved/>}/>
-        <Route path={"/panel/admin/recepciones/historial"} element={<ReceptionsHistory/>}/>
+        <Route
+          path={"/panel/admin/recepciones/pendientes"}
+          element={<ReceptionsPending />}
+        />
+        <Route
+          path={"/panel/admin/recepciones/aprobados"}
+          element={<ReceptionsApproved />}
+        />
+        <Route
+          path={"/panel/admin/recepciones/historial"}
+          element={<ReceptionsHistory />}
+        />
 
         {/* Dashboard Sellers */}
-        <Route path={"/panel/vendedor/analiticas"} element={<SellerAnaliticsPage/>} />
-        <Route path={"/panel/vendedor/perfil"} element={<SellerProfilePage/>} />
+        <Route
+          path={"/panel/vendedor/analiticas"}
+          element={<SellerAnaliticsPage />}
+        />
+        <Route
+          path={"/panel/vendedor/perfil"}
+          element={<SellerProfilePage />}
+        />
 
-        <Route path={"/panel/vendedor/inventario/productos"} element={<SellersProductsPage/>}/>
-        <Route path={"/panel/vendedor/inventario/nuevo-producto"} element={<SellersNewProductsPage />}/>
+        <Route
+          path={"/panel/vendedor/inventario/productos"}
+          element={<SellersProductsPage />}
+        />
+        <Route
+          path={"/panel/vendedor/inventario/nuevo-producto"}
+          element={<SellersNewProductsPage />}
+        />
 
-        <Route path={"/panel/vendedor/productos/importacion"} element={<SellersImportsPage/>} />
+        <Route
+          path={"/panel/vendedor/productos/importacion"}
+          element={<SellersImportsPage />}
+        />
 
-        <Route path={"/panel/vendedor/tienda/publicaciones"} element={<SellersPostsPage />}/>
-        <Route path={"/panel/vendedor/tienda/crear-publicacion"} element={<CreatePostPage />}/>
-        
-        <Route path={"/panel/vendedor/tienda/combos"} element={<SellersProductsCombosPage/>}/>
-        <Route path={"/panel/vendedor/tienda/alta-rapida"} element={<SellersNewPostPage/>}/>
+        <Route
+          path={"/panel/vendedor/tienda/publicaciones"}
+          element={<SellersPostsPage />}
+        />
+        <Route
+          path={"/panel/vendedor/tienda/crear-publicacion"}
+          element={<CreatePostPage />}
+        />
 
-        <Route path={"/panel/vendedor/ventas/pedidos"} element={<SellerOrdersPage/>}/>
+        <Route
+          path={"/panel/vendedor/tienda/combos"}
+          element={<SellersProductsCombosPage />}
+        />
+        <Route
+          path={"/panel/vendedor/tienda/alta-rapida"}
+          element={<SellersNewPostPage />}
+        />
+
+        <Route
+          path={"/panel/vendedor/ventas/pedidos"}
+          element={<SellerOrdersPage />}
+        />
 
         {/* Dashbaord Clients */}
         <Route path={"/panel/compras"} element={<ClientsOrdersPage />} />
-
       </Routes>
     </div>
   );

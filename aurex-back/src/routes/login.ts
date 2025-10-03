@@ -1,7 +1,9 @@
 import { loginUser, registerUser } from "./controllers/login";
+import { UserRol, UserStatus, UserTS } from "../interfaces/UserTS";
 import { Request, Response } from "express";
 import { verificarToken } from "./controllers/verificacion";
 import { User, Business } from "../db";
+import { BusinessTS } from "../interfaces/Business";
 import { Router } from "express";
 
 const router = Router();
@@ -29,16 +31,18 @@ router.post("/signup", async (req: Request, res: Response) => {
     // Validate params
     if (email === "") throw new Error("missing parameter (email)");
     if (validateEmail(email)) throw new Error("Invalid email format");
+    if (role === "") throw new Error("missing parameter (role)");
+    if (role !== UserRol.CLIENT && role !== UserRol.SELLER)
+      throw new Error("invalid role");
     if (password === "") throw new Error("missing parameter (password)");
     if (password.length < 6)
       throw new Error("password must be at least 6 characters long");
 
     // Create new the user and login
     await registerUser(email, password, role);
-    const loginResponse = await loginUser(email, password);
 
     // Response confirmation
-    res.status(200).json(loginResponse);
+    res.status(200).json({ message: "User registered successfully" });
   } catch (error: any) {
     console.log(error);
     res
@@ -70,68 +74,75 @@ router.put(
   verificarToken,
   async (req: Request, res: Response) => {
     try {
-      const { user: userFromToken } = req.body;
-      const { user: userData, business: businessData } = req.body;
+      // Get data to request
+      const userToken = req.body.user;
+      const userData: UserTS = req.body.userData as UserTS;
+      const businessData: BusinessTS = req.body.businessData as BusinessTS;
 
-      if (!userFromToken) throw new Error("User not found in token");
+      console.log(req.body);
+      console.log(userData?.id, userToken?.userId);
+      console.log(userData?.id !== userToken?.userId);
 
-      // Buscar el usuario actual
-      const currentUser = await User.findByPk(userFromToken.userId);
+      // Check allowed access
+      if (userData?.id !== userToken?.userId)
+        throw new Error("The user id not allowed access");
+
+      // Check user data required
+      if (!userData) throw new Error("userData not found");
+      if (!userData.id) throw new Error("userData.id not found");
+      if (!userData.name) throw new Error("userData.name not found");
+
+      // Check business data required
+      if (!businessData) throw new Error("businessData not found");
+      if (!businessData.name) throw new Error("businessData.name not found");
+      if (!businessData.type) throw new Error("businessData.type not found");
+      if (!businessData.description)
+        throw new Error("businessData.description not found");
+
+      // Get user current data
+      const currentUser = await User.findByPk(userData.id);
       if (!currentUser) throw new Error("User not found");
+      const businessExist = await Business.findOne({
+        where: { userId: userData.id },
+      });
+      if (businessExist) throw new Error("Business already exists");
 
-      // Actualizar datos del usuario
+      // Update user data
       const updatedUser = await currentUser.update({
         name: userData.name,
+        status: UserStatus.WAITING,
+        photo: userData.photo,
         phone: userData.phone,
         address: userData.address,
         city: userData.city,
         state: userData.state,
         zipCode: userData.zipCode,
-        rol: userData.rol,
       });
 
-      let business = null;
+      // Create business and connect with the user
+      const business = await Business.create({
+        name: businessData.name,
+        type: businessData.type,
+        description: businessData.description,
+        address: businessData.address,
+        city: businessData.city,
+        state: businessData.state,
+        zipCode: businessData.zipCode,
+        taxId: businessData.taxId,
+        bankAccount: businessData.bankAccount,
+        userId: currentUser.dataValues.id,
+      });
 
-      // Si es vendedor, crear o actualizar el negocio
-      if (userData.rol === "Vendedor" && businessData) {
-        business = await Business.create({
-          businessName: businessData.businessName,
-          businessType: businessData.businessType,
-          businessDescription: businessData.businessDescription,
-          address: businessData.address,
-          city: businessData.city,
-          state: businessData.state,
-          zipCode: businessData.zipCode,
-          taxId: businessData.taxId,
-          bankAccount: businessData.bankAccount,
-          userId: currentUser.dataValues.id,
-        });
+      // Connect the business with the user
+      await updatedUser.update({ businessId: business.dataValues.id });
 
-        // Actualizar el businessId en el usuario
-        await updatedUser.update({ businessId: business.dataValues.id });
-      }
-
-      // Preparar respuesta
-      const response: any = {
-        user: {
-          id: updatedUser.dataValues.id,
-          name: updatedUser.dataValues.name,
-          email: updatedUser.dataValues.email,
-          photo: updatedUser.dataValues.photo,
-          rol: updatedUser.dataValues.rol,
-          status: updatedUser.dataValues.status,
-          phone: updatedUser.dataValues.phone,
-          address: updatedUser.dataValues.address,
-          city: updatedUser.dataValues.city,
-          state: updatedUser.dataValues.state,
-          zipCode: updatedUser.dataValues.zipCode,
-          businessId: updatedUser.dataValues.businessId,
-        },
+      // Format user data
+      const userResponse = updatedUser.dataValues;
+      delete userResponse.password;
+      const response = {
+        user: userResponse,
+        business: business.dataValues,
       };
-
-      if (business) {
-        response.business = business;
-      }
 
       res.status(200).json(response);
     } catch (error: any) {

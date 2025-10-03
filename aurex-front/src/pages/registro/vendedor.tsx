@@ -1,10 +1,10 @@
+import { ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { Business, initBusiness } from "../../interfaces/Business";
+import { User, UserRol, initUser } from "../../interfaces/Users";
+import { PaymentOption } from "../../interfaces/PaymentOption";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../../hooks/Auth/useAuth";
-import {
-  initVendedorRegistration,
-  VendedorRegistrationData,
-} from "../../interfaces/Users";
 
 import Header from "../../components/Marketplace/Headers/Header";
 import Footer from "../../components/Marketplace/Footer";
@@ -13,35 +13,125 @@ import Button from "../../components/ui/Button";
 
 export default function VendedorRegister() {
   const navigate = useNavigate();
-  const { completeVendedorRegistration, loading } = useAuth();
-  const [formData, setFormData] = useState<VendedorRegistrationData>(
-    initVendedorRegistration()
-  );
+  const { completeVendedorRegistration, loading, user } = useAuth();
+
+  // Estados para el flujo de pasos
+  const [currentStep, setCurrentStep] = useState(1);
   const [error, setError] = useState<string>("");
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Estados para cada paso
+  const [personalData, setPersonalData] = useState<User>(initUser());
+  const [businessData, setBusinessData] = useState<Business>(initBusiness());
+  const [paymentOptions, setPaymentOptions] = useState<PaymentOption[]>([]);
+
+  // Estados para formularios de pago
+  const [linkForm, setLinkForm] = useState({ link: "", pasarela: "" });
+  const [transferForm, setTransferForm] = useState({
+    cvu: "",
+    cbu: "",
+    otrosDatos: "",
+  });
+
+  // Funciones para manejo de datos personales
+  const handlePersonalDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setPersonalData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  // Funciones para manejo de datos del negocio
+  const handleBusinessDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setBusinessData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  const handleBusinessTextareaChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setBusinessData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
+  // Funciones para métodos de pago
+  const handleCreateLink = () => {
+    if (!linkForm.link) return;
+
+    const newOption: PaymentOption = {
+      id: Date.now().toString(),
+      userId: personalData.id || "",
+      type: "link",
+      link: linkForm.link,
+      pasarela: linkForm.pasarela,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setPaymentOptions((prev) => [...prev, newOption]);
+    setLinkForm({ link: "", pasarela: "" });
+  };
+
+  const handleCreateTransfer = () => {
+    if (!transferForm.cvu && !transferForm.cbu) return;
+
+    const newOption: PaymentOption = {
+      id: Date.now().toString(),
+      userId: personalData.id || "",
+      type: "transferencia",
+      cvu: transferForm.cvu,
+      cbu: transferForm.cbu,
+      otrosDatos: transferForm.otrosDatos,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setPaymentOptions((prev) => [...prev, newOption]);
+    setTransferForm({ cvu: "", cbu: "", otrosDatos: "" });
+  };
+
+  const handleDeletePaymentOption = (id: string) => {
+    setPaymentOptions((prev) => prev.filter((option) => option.id !== id));
+  };
+
+  // Funciones de navegación entre pasos
+  const nextStep = () => {
+    if (currentStep < 3) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleSubmit = async () => {
     try {
-      await completeVendedorRegistration(formData);
-      navigate("/panel/vendedor/analiticas");
+      setError("");
+
+      console.log(personalData);
+      console.log(user);
+
+      // Add current user data
+      const userData: User = {
+        ...personalData,
+        id: user?.id!,
+        email: user?.email!,
+        rol: UserRol.SELLER,
+      };
+
+      // Complete registration
+      await completeVendedorRegistration(userData, businessData).then(() => {
+        navigate("/panel/vendedor/analiticas");
+      });
     } catch (error) {
       console.error("Error al completar registro:", error);
       setError(
@@ -52,6 +142,318 @@ export default function VendedorRegister() {
 
   const handleSkip = () => {
     navigate("/panel/vendedor/analiticas");
+  };
+
+  const renderStepIndicator = () => (
+    <div className="flex items-center justify-center mb-8">
+      {[1, 2, 3].map((step) => (
+        <div key={step} className="flex items-center">
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+              currentStep >= step
+                ? "bg-primary text-white"
+                : "bg-gray-200 text-gray-600"
+            }`}
+          >
+            {currentStep > step ? <Check size={16} /> : step}
+          </div>
+          {step < 3 && (
+            <div
+              className={`w-16 h-1 mx-2 ${
+                currentStep > step ? "bg-primary" : "bg-gray-200"
+              }`}
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold mb-4 text-gray-700">
+              Información Personal y Dirección
+            </h2>
+
+            {/* Información personal */}
+            <div className="border-b pb-6">
+              <h3 className="text-lg font-medium mb-4 text-gray-600">
+                Información Personal
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  name="name"
+                  label="Nombre completo"
+                  value={personalData.name}
+                  onChange={handlePersonalDataChange}
+                  disabled={loading}
+                />
+                <Input
+                  name="phone"
+                  label="Teléfono"
+                  type="tel"
+                  value={personalData.phone || ""}
+                  onChange={handlePersonalDataChange}
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            {/* Dirección */}
+            <div className="pb-6">
+              <h3 className="text-lg font-medium mb-4 text-gray-600">
+                Dirección
+              </h3>
+              <div className="space-y-4">
+                <Input
+                  name="address"
+                  label="Dirección"
+                  value={personalData.address || ""}
+                  onChange={handlePersonalDataChange}
+                  disabled={loading}
+                />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Input
+                    name="city"
+                    label="Ciudad"
+                    value={personalData.city || ""}
+                    onChange={handlePersonalDataChange}
+                    disabled={loading}
+                  />
+                  <Input
+                    name="state"
+                    label="Estado/Provincia"
+                    value={personalData.state || ""}
+                    onChange={handlePersonalDataChange}
+                    disabled={loading}
+                  />
+                  <Input
+                    name="zipCode"
+                    label="Código postal"
+                    value={personalData.zipCode || ""}
+                    onChange={handlePersonalDataChange}
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold mb-4 text-gray-700">
+              Información del Negocio
+            </h2>
+
+            <div className="space-y-4">
+              <Input
+                name="name"
+                label="Nombre del negocio"
+                value={businessData.name}
+                onChange={handleBusinessDataChange}
+                disabled={loading}
+              />
+              <Input
+                name="type"
+                label="Tipo de negocio"
+                value={businessData.type}
+                onChange={handleBusinessDataChange}
+                disabled={loading}
+              />
+              <div className="relative flex flex-col overflow-hidden">
+                <label
+                  htmlFor="description"
+                  className="absolute top-1 left-2 text-xs text-gray-500 font-medium"
+                >
+                  Descripción del negocio
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  className="text-black p-2 pt-5 focus:outline-none rounded-lg border border-gray-200 bg-white min-h-[100px] disabled:opacity-50"
+                  placeholder="Cuéntanos sobre tu negocio, qué productos vendes, etc."
+                  value={businessData.description}
+                  onChange={handleBusinessTextareaChange}
+                  disabled={loading}
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  name="taxId"
+                  label="RFC / Tax ID"
+                  value={businessData.taxId}
+                  onChange={handleBusinessDataChange}
+                  disabled={loading}
+                />
+                <Input
+                  name="bankAccount"
+                  label="Cuenta bancaria"
+                  value={businessData.bankAccount}
+                  onChange={handleBusinessDataChange}
+                  disabled={loading}
+                />
+              </div>
+            </div>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold mb-4 text-gray-700">
+              Métodos de Pago
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Configura cómo quieres recibir los pagos de tus clientes
+            </p>
+
+            {/* Opciones existentes */}
+            {paymentOptions.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-medium text-gray-700">
+                  Métodos configurados:
+                </h3>
+                {paymentOptions.map((option) => (
+                  <div
+                    key={option.id}
+                    className="border rounded p-3 bg-gray-50"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium capitalize">
+                          {option.type === "link"
+                            ? "Pago por Link"
+                            : "Transferencia"}
+                        </span>
+                      </div>
+                      <Button
+                        type="secondary"
+                        variant="outline"
+                        onClick={() => handleDeletePaymentOption(option.id)}
+                        disabled={loading}
+                      >
+                        Eliminar
+                      </Button>
+                    </div>
+                    {option.type === "link" && (
+                      <div className="mt-2 text-sm text-gray-600">
+                        <p>Link: {option.link}</p>
+                        <p>Pasarela: {option.pasarela}</p>
+                      </div>
+                    )}
+                    {option.type === "transferencia" && (
+                      <div className="mt-2 text-sm text-gray-600">
+                        <p>CVU: {option.cvu}</p>
+                        <p>CBU: {option.cbu}</p>
+                        {option.otrosDatos && <p>Otros: {option.otrosDatos}</p>}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Formulario Link */}
+            <div className="border-t pt-4">
+              <h3 className="font-medium mb-3 text-gray-700">
+                Agregar Pago por Link
+              </h3>
+              <div className="space-y-3">
+                <Input
+                  name="link"
+                  label="Link de pago"
+                  value={linkForm.link}
+                  onChange={(e) =>
+                    setLinkForm((prev) => ({ ...prev, link: e.target.value }))
+                  }
+                  disabled={loading}
+                />
+                <Input
+                  name="pasarela"
+                  label="Pasarela de pago"
+                  value={linkForm.pasarela}
+                  onChange={(e) =>
+                    setLinkForm((prev) => ({
+                      ...prev,
+                      pasarela: e.target.value,
+                    }))
+                  }
+                  disabled={loading}
+                />
+                <Button
+                  type="primary"
+                  onClick={handleCreateLink}
+                  disabled={loading || !linkForm.link}
+                  className="w-full"
+                >
+                  Agregar Link
+                </Button>
+              </div>
+            </div>
+
+            {/* Formulario Transferencia */}
+            <div className="border-t pt-4">
+              <h3 className="font-medium mb-3 text-gray-700">
+                Agregar Transferencia/Efectivo
+              </h3>
+              <div className="space-y-3">
+                <Input
+                  name="cvu"
+                  label="CVU"
+                  value={transferForm.cvu}
+                  onChange={(e) =>
+                    setTransferForm((prev) => ({
+                      ...prev,
+                      cvu: e.target.value,
+                    }))
+                  }
+                  disabled={loading}
+                />
+                <Input
+                  name="cbu"
+                  label="CBU"
+                  value={transferForm.cbu}
+                  onChange={(e) =>
+                    setTransferForm((prev) => ({
+                      ...prev,
+                      cbu: e.target.value,
+                    }))
+                  }
+                  disabled={loading}
+                />
+                <Input
+                  name="otrosDatos"
+                  label="Otros datos"
+                  value={transferForm.otrosDatos}
+                  onChange={(e) =>
+                    setTransferForm((prev) => ({
+                      ...prev,
+                      otrosDatos: e.target.value,
+                    }))
+                  }
+                  disabled={loading}
+                />
+                <Button
+                  type="primary"
+                  onClick={handleCreateTransfer}
+                  disabled={loading || (!transferForm.cvu && !transferForm.cbu)}
+                  className="w-full"
+                >
+                  Agregar Transferencia
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
   };
 
   return (
@@ -72,149 +474,49 @@ export default function VendedorRegister() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Información personal */}
-            <div className="border-b pb-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-700">
-                Información Personal
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  name="name"
-                  label="Nombre completo"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                />
+          {renderStepIndicator()}
+          {renderStepContent()}
 
-                <Input
-                  name="phone"
-                  label="Teléfono"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
-
-            {/* Información del negocio */}
-            <div className="border-b pb-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-700">
-                Información del Negocio
-              </h2>
-              <div className="space-y-4">
-                <Input
-                  name="businessName"
-                  label="Nombre del negocio"
-                  value={formData.businessName}
-                  onChange={handleInputChange}
-                />
-
-                <Input
-                  name="businessType"
-                  label="Tipo de negocio"
-                  value={formData.businessType}
-                  onChange={handleInputChange}
-                />
-
-                <div className="relative flex flex-col overflow-hidden">
-                  <label
-                    htmlFor="businessDescription"
-                    className="absolute top-1 left-2 text-xs text-gray-500 font-medium"
-                  >
-                    Descripción del negocio
-                  </label>
-                  <textarea
-                    id="businessDescription"
-                    name="businessDescription"
-                    className="text-black p-2 pt-5 focus:outline-none rounded-lg border border-gray-200 bg-white min-h-[100px]"
-                    placeholder="Cuéntanos sobre tu negocio, qué productos vendes, etc."
-                    value={formData.businessDescription}
-                    onChange={handleTextareaChange}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Dirección */}
-            <div className="border-b pb-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-700">
-                Dirección
-              </h2>
-              <div className="space-y-4">
-                <Input
-                  name="address"
-                  label="Dirección"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                />
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Input
-                    name="city"
-                    label="Ciudad"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                  />
-
-                  <Input
-                    name="state"
-                    label="Estado/Provincia"
-                    value={formData.state}
-                    onChange={handleInputChange}
-                  />
-
-                  <Input
-                    name="zipCode"
-                    label="Código postal"
-                    value={formData.zipCode}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Información fiscal y bancaria */}
-            <div className="pb-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-700">
-                Información Fiscal y Bancaria
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  name="taxId"
-                  label="RFC / Tax ID"
-                  value={formData.taxId}
-                  onChange={handleInputChange}
-                />
-
-                <Input
-                  name="bankAccount"
-                  label="Cuenta bancaria"
-                  value={formData.bankAccount}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 pt-6 mt-6 border-t">
+            {currentStep > 1 && (
               <Button
-                type="primary"
-                className="flex-1"
-                onClick={() => handleSubmit(new Event("submit") as any)}
-                disabled={loading}
-              >
-                {loading ? "Completando..." : "Completar registro"}
-              </Button>
-              <Button
-                type="primary"
+                type="secondary"
                 variant="outline"
-                className="flex-1"
-                onClick={handleSkip}
+                onClick={prevStep}
                 disabled={loading}
+                className="flex items-center gap-2"
               >
-                Omitir por ahora
+                <ChevronLeft size={16} />
+                Anterior
               </Button>
-            </div>
-          </form>
+            )}
+
+            {currentStep < 3 ? (
+              <Button
+                type="primary"
+                onClick={nextStep}
+                disabled={loading}
+                className="flex items-center gap-2 ml-auto"
+              >
+                Siguiente
+                <ChevronRight size={16} />
+              </Button>
+            ) : (
+              <div className="flex gap-3 ml-auto">
+                <Button
+                  type="secondary"
+                  variant="outline"
+                  onClick={handleSkip}
+                  disabled={loading}
+                >
+                  Omitir por ahora
+                </Button>
+                <Button type="primary" onClick={handleSubmit} loading={loading}>
+                  Completar registro
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
       <Footer />

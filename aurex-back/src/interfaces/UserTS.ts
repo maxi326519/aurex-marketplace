@@ -2,10 +2,16 @@ export interface UserTS {
   id?: string;
   name: string;
   email: string;
+  password?: string;
   rol: UserRol;
   status: UserStatus;
-  password?: string;
-  CompanyId?: string;
+  photo?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  businessId?: string;
 }
 
 export enum UserRol {

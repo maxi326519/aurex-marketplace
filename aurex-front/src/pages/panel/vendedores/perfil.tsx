@@ -1,4 +1,5 @@
-import { UserRol, UserStatus } from "../../../interfaces/Users";
+import { UserRol, UserStatus, User as UserInterface } from "../../../interfaces/Users";
+import { Business } from "../../../interfaces/Business";
 import { useState, useEffect } from "react";
 import { PaymentOption } from "../../../interfaces/PaymentOption";
 import { useAuth } from "../../../hooks/Auth/useAuth";
@@ -9,7 +10,7 @@ import {
   CardTitle,
 } from "../../../components/ui/card";
 import {
-  User,
+  User as UserIcon,
   Edit,
   Package,
   TrendingUp,
@@ -21,6 +22,8 @@ import {
   CreditCard,
   Link as LinkIcon,
   Banknote,
+  Save,
+  X,
 } from "lucide-react";
 
 import DashboardLayout from "../../../components/Dashboard/SellerDashboard";
@@ -52,13 +55,19 @@ interface AnalyticsData {
 export default function SellerProfilePage() {
   const {
     user,
+    business,
     getPaymentOptions,
     createPaymentOption,
-    updatePaymentOption,
     deletePaymentOption,
   } = useAuth();
   const [paymentOptions, setPaymentOptions] = useState<PaymentOption[]>([]);
   const [loading, setLoading] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Estados para edición
+  const [editedUser, setEditedUser] = useState<UserInterface | null>(null);
+  const [editedBusiness, setEditedBusiness] = useState<Business | null>(null);
 
   // Form states
   const [linkForm, setLinkForm] = useState({ link: "", pasarela: "" });
@@ -71,8 +80,11 @@ export default function SellerProfilePage() {
   useEffect(() => {
     if (user?.id) {
       loadPaymentOptions();
+      // Inicializar datos para edición
+      setEditedUser(user);
+      setEditedBusiness(business);
     }
-  }, [user]);
+  }, [user, business]);
 
   const loadPaymentOptions = async () => {
     if (!user?.id) return;
@@ -136,6 +148,61 @@ export default function SellerProfilePage() {
     }
   };
 
+  // Funciones para edición
+  const handleEditClick = () => {
+    setEditing(true);
+    setEditedUser(user);
+    setEditedBusiness(business);
+  };
+
+  const handleCancelEdit = () => {
+    setEditing(false);
+    setEditedUser(user);
+    setEditedBusiness(business);
+  };
+
+  const handleUserDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!editedUser) return;
+    const { name, value } = e.target;
+    setEditedUser(prev => prev ? { ...prev, [name]: value } : null);
+  };
+
+  const handleBusinessDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!editedBusiness) return;
+    const { name, value } = e.target;
+    setEditedBusiness(prev => prev ? { ...prev, [name]: value } : null);
+  };
+
+  const handleBusinessTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (!editedBusiness) return;
+    const { name, value } = e.target;
+    setEditedBusiness(prev => prev ? { ...prev, [name]: value } : null);
+  };
+
+  const handleSaveChanges = async () => {
+    if (!editedUser) return;
+    
+    setSaving(true);
+    try {
+      // Aquí deberías implementar la lógica para guardar los cambios
+      // await updateUser(editedUser);
+      // if (editedBusiness) {
+      //   await updateBusiness(editedBusiness);
+      // }
+      
+      console.log("Saving user data:", editedUser);
+      console.log("Saving business data:", editedBusiness);
+      
+      setEditing(false);
+      // Actualizar el usuario en el contexto
+      // setUser(editedUser);
+    } catch (error) {
+      console.error("Error saving changes:", error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const analytics: AnalyticsData = {
     totalProducts: 42,
     totalSales: 154,
@@ -163,10 +230,32 @@ export default function SellerProfilePage() {
               <CardTitle className="text-lg font-semibold">
                 Perfil Comercial
               </CardTitle>
-              <Button type="primary">
-                <Edit size={16} />
-                Editar
-              </Button>
+              {!editing ? (
+                <Button type="primary" onClick={handleEditClick}>
+                  <Edit size={16} />
+                  Editar
+                </Button>
+              ) : (
+                <div className="flex gap-2">
+                  <Button
+                    type="secondary"
+                    variant="outline"
+                    onClick={handleCancelEdit}
+                    disabled={saving}
+                  >
+                    <X size={16} />
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="primary"
+                    onClick={handleSaveChanges}
+                    loading={saving}
+                  >
+                    <Save size={16} />
+                    Guardar
+                  </Button>
+                </div>
+              )}
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-col items-center text-center">
@@ -177,21 +266,50 @@ export default function SellerProfilePage() {
                     className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
                   />
                   <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-1">
-                    <User size={16} className="text-white" />
+                    <UserIcon size={16} className="text-white" />
                   </div>
                 </div>
 
-                <h2 className="text-xl font-bold">{user.name}</h2>
-                <p className="text-gray-600">{user.email}</p>
-                <p className="text-sm text-gray-500 mt-1">
-                  Vendedor desde: {new Date().toLocaleDateString()}
-                </p>
+                {editing ? (
+                  <div className="w-full space-y-3">
+                    <Input
+                      name="name"
+                      label="Nombre completo"
+                      value={editedUser?.name || ""}
+                      onChange={handleUserDataChange}
+                      disabled={saving}
+                    />
+                    <Input
+                      name="email"
+                      label="Email"
+                      type="email"
+                      value={editedUser?.email || ""}
+                      onChange={handleUserDataChange}
+                      disabled={saving}
+                    />
+                    <Input
+                      name="phone"
+                      label="Teléfono"
+                      value={editedUser?.phone || ""}
+                      onChange={handleUserDataChange}
+                      disabled={saving}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <h2 className="text-xl font-bold">{user.name}</h2>
+                    <p className="text-gray-600">{user.email}</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Vendedor desde: {new Date().toLocaleDateString()}
+                    </p>
 
-                <div className="flex items-center gap-1 mt-2">
-                  <Star size={16} className="fill-yellow-400 text-yellow-400" />
-                  <span className="font-semibold">4.8</span>
-                  <span className="text-gray-500">(154 ventas)</span>
-                </div>
+                    <div className="flex items-center gap-1 mt-2">
+                      <Star size={16} className="fill-yellow-400 text-yellow-400" />
+                      <span className="font-semibold">4.8</span>
+                      <span className="text-gray-500">(154 ventas)</span>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="border-t pt-4 space-y-2">
@@ -205,6 +323,101 @@ export default function SellerProfilePage() {
                   <span className="text-gray-600">Rol:</span>
                   <span className="font-medium capitalize">{user.rol}</span>
                 </div>
+              </div>
+
+              {/* Información del negocio */}
+              <div className="border-t pt-4 space-y-3">
+                <h3 className="font-medium text-gray-700">Información del Negocio</h3>
+                
+                {editing ? (
+                  <>
+                    <Input
+                      name="name"
+                      label="Nombre del negocio"
+                      value={editedBusiness?.name || ""}
+                      onChange={handleBusinessDataChange}
+                      disabled={saving}
+                    />
+                    <Input
+                      name="type"
+                      label="Tipo de negocio"
+                      value={editedBusiness?.type || ""}
+                      onChange={handleBusinessDataChange}
+                      disabled={saving}
+                    />
+                    <div className="relative flex flex-col overflow-hidden">
+                      <label
+                        htmlFor="description"
+                        className="absolute top-1 left-2 text-xs text-gray-500 font-medium"
+                      >
+                        Descripción del negocio
+                      </label>
+                      <textarea
+                        id="description"
+                        name="description"
+                        className="text-black p-2 pt-5 focus:outline-none rounded-lg border border-gray-200 bg-white min-h-[80px] disabled:opacity-50"
+                        placeholder="Descripción del negocio"
+                        value={editedBusiness?.description || ""}
+                        onChange={handleBusinessTextareaChange}
+                        disabled={saving}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 gap-3">
+                      <Input
+                        name="taxId"
+                        label="RFC / Tax ID"
+                        value={editedBusiness?.taxId || ""}
+                        onChange={handleBusinessDataChange}
+                        disabled={saving}
+                      />
+                      <Input
+                        name="bankAccount"
+                        label="Cuenta bancaria"
+                        value={editedBusiness?.bankAccount || ""}
+                        onChange={handleBusinessDataChange}
+                        disabled={saving}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {business ? (
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Nombre:</span>
+                          <span className="font-medium">{business.name}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Tipo:</span>
+                          <span className="font-medium">{business.type}</span>
+                        </div>
+                        {business.description && (
+                          <div className="flex flex-col">
+                            <span className="text-gray-600 mb-1">Descripción:</span>
+                            <span className="text-sm text-gray-700">{business.description}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">RFC:</span>
+                          <span className="font-medium">{business.taxId}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Cuenta bancaria:</span>
+                          <span className="font-medium">{business.bankAccount}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-gray-500 text-sm">
+                          No hay información del negocio disponible
+                        </p>
+                        <p className="text-gray-400 text-xs mt-1">
+                          Completa tu perfil para agregar esta información
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>

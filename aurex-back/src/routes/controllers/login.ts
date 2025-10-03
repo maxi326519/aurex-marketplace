@@ -21,11 +21,10 @@ export const registerUser = async (
         ? UserStatus.WAITING
         : UserStatus.WAITING,
   };
+  const newUser = await setUser({ ...user });
 
-  console.log(user);
-
-  const newUser = setUser({...user});
-  return newUser;
+  const { currentPassword, ...userData } = newUser.dataValues;
+  return userData;
 };
 
 export const loginUser = async (email: string, password: string) => {

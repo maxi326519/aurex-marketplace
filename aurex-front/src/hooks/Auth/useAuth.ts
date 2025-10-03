@@ -1,14 +1,13 @@
 import axios, { AxiosError } from "axios";
 import { useAuthStore } from "./useAuthStore";
-import { useEffect } from "react";
+import { Business } from "../../interfaces/Business";
 import {
   LoginData,
   User,
   UserRol,
   CompradorRegistrationData,
-  VendedorRegistrationData,
-  CompleteUserRegistration,
 } from "../../interfaces/Users";
+import Swal from "sweetalert2";
 
 interface PaymentOption {
   id: string;
@@ -25,6 +24,7 @@ interface PaymentOption {
 
 interface UseAuth {
   user: User | null;
+  business: Business | null;
   token: string | null;
   isAuthenticated: boolean;
   loading: boolean;
@@ -37,8 +37,9 @@ interface UseAuth {
     registrationData: CompradorRegistrationData
   ) => Promise<User | undefined>;
   completeVendedorRegistration: (
-    registrationData: VendedorRegistrationData
-  ) => Promise<CompleteUserRegistration | undefined>;
+    userData: User,
+    businessData: Business
+  ) => Promise<void>;
   login: (loginData: LoginData) => Promise<User | undefined>;
   logout: () => Promise<void>;
   reLogin: () => Promise<void>;
@@ -56,6 +57,7 @@ interface UseAuth {
 export const useAuth = (): UseAuth => {
   const {
     user,
+    business,
     token,
     isAuthenticated,
     loading,
@@ -133,51 +135,24 @@ export const useAuth = (): UseAuth => {
   };
 
   const completeVendedorRegistration = async (
-    registrationData: VendedorRegistrationData
-  ): Promise<CompleteUserRegistration | undefined> => {
+    userData: User,
+    businessData: Business
+  ): Promise<void> => {
     setLoading(true);
     try {
-      const {
-        businessName,
-        businessType,
-        businessDescription,
-        taxId,
-        bankAccount,
-        ...userData
-      } = registrationData;
-
-      // Crear el negocio
-      const businessData = {
-        businessName,
-        businessType,
-        businessDescription,
-        address: userData.address,
-        city: userData.city,
-        state: userData.state,
-        zipCode: userData.zipCode,
-        taxId,
-        bankAccount,
-      };
-
+      // Complete profiel and Business data
       const response = await axios.put("/sesion/complete-registration", {
-        user: {
-          ...userData,
-          rol: UserRol.SELLER,
-        },
-        business: businessData,
+        userData,
+        businessData,
       });
+      if (!response.data?.user || !response.data?.business)
+        throw new Error("Error al completar registro");
 
-      if (!response.data?.user) throw new Error("Error al completar registro");
-
-      // Actualizar el usuario y negocio en el store
+      // Update local store
       setUser({ ...response.data.user, token });
-      if (response.data.business) {
-        setBusiness(response.data.business);
-      }
-
-      return response.data;
+      setBusiness(response.data.business);
     } catch (error) {
-      console.error("Error al completar registro de vendedor:", error);
+      console.error("Error to complete registration", error);
       if (error instanceof AxiosError) {
         throw new Error(
           error?.response?.data?.error ||
@@ -185,6 +160,7 @@ export const useAuth = (): UseAuth => {
             "Error al completar registro"
         );
       }
+      Swal.fire("Error", "Error al completar registro", "error");
     } finally {
       setLoading(false);
     }
@@ -206,11 +182,8 @@ export const useAuth = (): UseAuth => {
       // Configure axios interceptor
       configureAxiosInterceptor(token);
 
-      // Save token to localStorage (manualmente para consistencia)
+      // Save token to localStorage
       localStorage.setItem("token", token);
-      // Agregar el token a las peticiones de axios por defecto
-      if (token)
-        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
       // Update store
       setUser({ ...userData, token });
@@ -258,17 +231,17 @@ export const useAuth = (): UseAuth => {
       const token = localStorage.getItem("token");
 
       // Check token
-      if (!token) throw new Error("Token doesn't exist");
+      if (token) {
+        // Configure axios interceptor
+        configureAxiosInterceptor(token);
 
-      // Configure axios interceptor
-      configureAxiosInterceptor(token);
+        // Login with token
+        const response = await axios.post("/sesion/token");
 
-      // Login with token
-      const response = await axios.post("/sesion/login/token");
-
-      // Update store
-      setUser({ ...response.data, token });
-      setToken(token);
+        // Update store
+        setUser({ ...response.data, token });
+        setToken(token);
+      }
     } catch (error) {
       console.error("Relogin error:", error);
 
@@ -334,6 +307,7 @@ export const useAuth = (): UseAuth => {
 
   return {
     user,
+    business,
     token,
     isAuthenticated,
     loading,
