@@ -1,4 +1,4 @@
-import { UserTS, UserRol, UserStatus } from "../../interfaces/UserTS";
+import { UserRol } from "../../interfaces/UserTS";
 import { User } from "../../db";
 import bcrypt from "bcrypt";
 

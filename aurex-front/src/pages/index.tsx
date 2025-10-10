@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Post } from "../interfaces/Posts";
 
 import BrandCard from "../components/Marketplace/BrandCard";
 import CategoryButton from "../components/Marketplace/CategroyButtor";
@@ -10,7 +11,7 @@ import ProductCard from "../components/Marketplace/ProductCard";
 import Button from "../components/ui/Button";
 import Title from "../components/Marketplace/Title";
 
-import category1 from "../assets/img/payments/IMG-20250820-WA0002.jpg";
+/* import category1 from "../assets/img/payments/IMG-20250820-WA0002.jpg";
 import category2 from "../assets/img/payments/IMG-20250820-WA0003.jpg";
 import category3 from "../assets/img/payments/IMG-20250820-WA0004.jpg";
 import category4 from "../assets/img/payments/IMG-20250820-WA0005.jpg";
@@ -18,20 +19,19 @@ import category5 from "../assets/img/payments/IMG-20250820-WA0006.jpg";
 import category6 from "../assets/img/payments/IMG-20250820-WA0007.jpg";
 import category7 from "../assets/img/payments/IMG-20250820-WA0008.jpg";
 import category8 from "../assets/img/payments/IMG-20250820-WA0009.jpg";
-import category9 from "../assets/img/payments/IMG-20250820-WA0010.jpg";
+import category9 from "../assets/img/payments/IMG-20250820-WA0010.jpg"; */
 
-import news1 from "../assets/img/news/IMG-20250820-WA0011.jpg";
+/* import news1 from "../assets/img/news/IMG-20250820-WA0011.jpg";
 import news2 from "../assets/img/news/IMG-20250820-WA0012.jpg";
 import news3 from "../assets/img/news/IMG-20250820-WA0013.jpg";
-import news4 from "../assets/img/news/IMG-20250820-WA0014.jpg";
+import news4 from "../assets/img/news/IMG-20250820-WA0014.jpg"; */
 
 import img1 from "../assets/img/IMG-20250820-WA0015.jpg";
 import img2 from "../assets/img/IMG-20250820-WA0016.jpg";
 import img3 from "../assets/img/IMG-20250820-WA0017.jpg";
-import { Post } from "../interfaces/Posts";
 
-const categories = [
-  { img: category1, name: "Baños" },
+const categories: any[] = [
+/*   { img: category1, name: "Baños" },
   { img: category2, name: "Pisos" },
   { img: category3, name: "Herramientas" },
   { img: category4, name: "Exterior" },
@@ -39,14 +39,14 @@ const categories = [
   { img: category6, name: "Muebles" },
   { img: category7, name: "Electro" },
   { img: category8, name: "Aberturas" },
-  { img: category9, name: "Dormitorio" },
+  { img: category9, name: "Dormitorio" }, */
 ];
 
-const brands = [
-  { name: "LG", logo: news1 },
+const brands: any[] = [
+/*   { name: "LG", logo: news1 },
   { name: "BOSCH", logo: news2 },
   { name: "MOTOROLA", logo: news3 },
-  { name: "HP", logo: news4 },
+  { name: "HP", logo: news4 }, */
 ];
 
 const categoriesRecomended = [

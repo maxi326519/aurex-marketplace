@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { Router } from "express";
 import {
-  getPaymentOptionsByUser,
+  getPaymentOptionsByBusiness,
   createPaymentOption,
   updatePaymentOption,
   deletePaymentOption,
@@ -9,14 +9,14 @@ import {
 
 const router = Router();
 
-// Obtener opciones de pago por usuario (userId en query o desde auth)
+// Obtener opciones de pago por business (businessId en query o desde auth)
 router.get("/", async (req: Request, res: Response) => {
   try {
-    const { userId } = req.query;
-    if (!userId) {
-      return res.status(400).json({ error: "userId is required" });
+    const { businessId } = req.query;
+    if (!businessId) {
+      return res.status(400).json({ error: "businessId is required" });
     }
-    const options = await getPaymentOptionsByUser(userId as string);
+    const options = await getPaymentOptionsByBusiness(businessId as string);
     res.status(200).json(options);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

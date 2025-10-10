@@ -10,7 +10,7 @@ import Button from "../components/ui/Button";
 
 interface PaymentOption {
   id: string;
-  userId: string;
+  businessId: string;
   type: "link" | "transferencia";
   link?: string;
   pasarela?: string;
@@ -27,26 +27,26 @@ export default function Pagos() {
     items,
     loading: cartLoading,
     createOrder,
-    getFirstUserId,
+    getFirstBusinessId,
   } = useCartStore();
-  const { getPaymentOptions } = useAuth();
+  const { getPaymentOptions, user } = useAuth();
   const [paymentOptions, setPaymentOptions] = useState<PaymentOption[]>([]);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const loadPaymentOptions = async () => {
-      const userId = getFirstUserId();
-      console.log("UserId from first item:", userId);
+      const businessId = getFirstBusinessId();
+      console.log("BusinessId from first item:", businessId);
       console.log("Items in cart:", items);
-      if (userId) {
+      if (businessId) {
         try {
-          const opts = await getPaymentOptions(userId);
+          const opts = await getPaymentOptions(businessId);
           console.log("Payment options received:", opts);
           setPaymentOptions(opts);
         } catch (error) {
           console.error(
-            `Error loading payment options for user ${userId}:`,
+            `Error loading payment options for business ${businessId}:`,
             error
           );
         }
@@ -56,14 +56,14 @@ export default function Pagos() {
     if (items.length > 0) {
       loadPaymentOptions();
     }
-  }, [items, getFirstUserId, getPaymentOptions]);
+  }, [items, getFirstBusinessId, getPaymentOptions]);
 
   const handlePayment = async () => {
     if (!selectedOption) return;
 
     setLoading(true);
     try {
-      await createOrder();
+      await (createOrder as any)(user?.id); // Pasar el userId del usuario autenticado
       navigate("/"); // O a una página de confirmación
     } catch (error) {
       console.error("Error processing payment:", error);

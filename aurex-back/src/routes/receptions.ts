@@ -90,7 +90,7 @@ router.post(
         data,
         productsFile,
         remittanceFile,
-        user?.userId
+        user?.businessId || user?.userId // Usar businessId si existe, sino userId como fallback
       );
       res.status(200).json(newReception);
     } catch (error: any) {

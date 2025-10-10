@@ -63,21 +63,22 @@ export const {
   Reception,
 } = sequelize.models;
 
-User.hasMany(Movements);
-User.hasMany(Reception);
 User.hasOne(Business);
-User.hasMany(Order);
-User.hasMany(PaymentOptions);
+User.hasMany(Order); // Usuario que crea la orden
 
 Business.belongsTo(User);
-PaymentOptions.belongsTo(User);
-
-Reception.belongsTo(User);
+Business.hasMany(Movements);
+Business.hasMany(Reception);
+Business.hasMany(PaymentOptions);
+Business.hasMany(Product);
+Business.hasMany(Post);
+Business.hasMany(Order); // Business dueño de los productos en la orden
 
 Storage.hasMany(Stock);
 Storage.hasMany(Movements);
 
 Product.belongsTo(Categories);
+Product.belongsTo(Business); // Producto pertenece a un Business
 Product.hasMany(Stock);
 Product.hasMany(Movements);
 Product.hasMany(OrderItem, { foreignKey: "productId", as: "orderItems" });
@@ -88,13 +89,19 @@ Stock.belongsTo(Product);
 Stock.hasMany(Movements);
 
 Post.belongsTo(Product, { foreignKey: "productId", as: "product" });
+Post.belongsTo(Business); // Post pertenece a un Business
 
-Movements.belongsTo(User);
+Movements.belongsTo(Business); // Movement pertenece a un Business
 Movements.belongsTo(Storage);
 Movements.belongsTo(Stock);
 Movements.belongsTo(Product);
 
-Order.belongsTo(User);
+PaymentOptions.belongsTo(Business); // PaymentOptions pertenece a un Business
+
+Reception.belongsTo(Business); // Reception pertenece a un Business
+
+Order.belongsTo(User); // Usuario que crea la orden
+Order.belongsTo(Business); // Business dueño de los productos
 Order.hasMany(OrderItem, { foreignKey: "orderId", as: "items" });
 OrderItem.belongsTo(Order, { foreignKey: "orderId" });
 OrderItem.belongsTo(Product, { foreignKey: "productId", as: "product" });

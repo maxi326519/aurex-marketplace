@@ -55,6 +55,7 @@ export default function Login() {
 
   function handleSetLogin(email: string, password: string) {
     handleLogin({ email, password }, (user: User | undefined) => {
+      console.log("Redirect");
       if (user?.rol === UserRol.CLIENT) navigate("/");
       if (user?.rol === UserRol.SELLER) navigate("/panel/vendedor/analiticas");
       if (user?.rol === UserRol.ADMIN) navigate("/panel/admin/analiticas");
@@ -87,7 +88,7 @@ export default function Login() {
                     email: import.meta.env.VITE_ADMIN_USER,
                     password: import.meta.env.VITE_ADMIN_PASS,
                   },
-                  () => navigate("/panel/compras")
+                  () => navigate("/")
                 )
               }
             >

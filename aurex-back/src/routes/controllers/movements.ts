@@ -1,4 +1,4 @@
-import { Movements, Stock, Storage, Product, User } from "../../db";
+import { Movements, Stock, Storage, Product, Business } from "../../db";
 
 const setMovements = async (
   date: Date,
@@ -7,7 +7,7 @@ const setMovements = async (
   StockId: string,
   StorageId: string,
   ProductId: string,
-  UserId?: string
+  BusinessId?: string
 ) => {
   if (!date) {
     throw new Error('The "date" parameter is required.');
@@ -37,10 +37,10 @@ const setMovements = async (
       await newMovements.setProduct(product);
     }
   }
-  if (UserId) {
-    const user = await User.findByPk(UserId);
-    if (user) {
-      await newMovements.setUser(user);
+  if (BusinessId) {
+    const business = await Business.findByPk(BusinessId);
+    if (business) {
+      await newMovements.setBusiness(business);
     }
   }
   return newMovements;

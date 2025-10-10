@@ -11,7 +11,7 @@ interface CartItem {
   image: string;
   description?: string;
   productId?: string;
-  userId?: string;
+  businessId?: string;
   quantity: number;
   productInfo?: {
     sku?: string;
@@ -30,8 +30,8 @@ interface CartState {
   clear: () => void;
   getTotalItems: () => number;
   getTotalAmount: () => number;
-  createOrder: () => Promise<void>;
-  getFirstUserId: () => string | undefined;
+  createOrder: (userId?: string) => Promise<void>;
+  getFirstBusinessId: () => string | undefined;
 }
 
 const useCartStore = create<CartState>((set, get) => ({
@@ -60,7 +60,7 @@ const useCartStore = create<CartState>((set, get) => ({
         image: post.product?.name || "Producto",
         description: post.content,
         productId: post.productId,
-        userId: post.userId,
+        businessId: post.businessId,
         quantity: 1,
         productInfo: {
           sku: post.product?.sku,
@@ -109,7 +109,7 @@ const useCartStore = create<CartState>((set, get) => ({
     return get().items.reduce((total, item) => total + (item.price * item.quantity), 0);
   },
 
-  createOrder: async () => {
+  createOrder: async (userId?: string) => {
     const { items } = get();
 
     if (items.length === 0) {
@@ -120,12 +120,16 @@ const useCartStore = create<CartState>((set, get) => ({
     set({ loading: true });
 
     try {
+      const firstBusinessId = get().getFirstBusinessId();
+      
       const orderData = {
         date: new Date(),
         status: OrdersStatus.PENDING,
         quantity: get().getTotalItems(),
         totalAmount: get().getTotalAmount(),
         supplier: "Cliente", // Por ahora hardcodeado
+        userId: userId, // Usuario que crea la orden
+        businessId: firstBusinessId, // Business dueño de los productos
         items: items.map(item => ({
           productId: item.productId,
           quantity: item.quantity,
@@ -147,9 +151,9 @@ const useCartStore = create<CartState>((set, get) => ({
     }
   },
 
-  getFirstUserId: () => {
+  getFirstBusinessId: () => {
     const { items } = get();
-    return items.length > 0 ? items[0].userId : undefined;
+    return items.length > 0 ? items[0].businessId : undefined;
   },
 }));
 

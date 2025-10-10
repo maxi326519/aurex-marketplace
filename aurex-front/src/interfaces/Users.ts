@@ -38,6 +38,7 @@ export const initLoginData = (): LoginData => ({
 });
 
 export interface CompradorRegistrationData {
+  id: string;
   name: string;
   phone: string;
   address: string;
@@ -55,6 +56,7 @@ export const initUser = (): User => ({
 });
 
 export const initCompradorRegistration = (): CompradorRegistrationData => ({
+  id: "",
   name: "",
   phone: "",
   address: "",

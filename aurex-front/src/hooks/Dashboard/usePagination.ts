@@ -22,7 +22,7 @@ export default function usePagination<T>(data: T[]): UsePagination<T> {
   const [page, setPage] = useState(initPage());
   const [rows, setRows] = useState<T[]>([]);
 
-  const propPerPage = 2;
+  const propPerPage = 10;
   const maxButtonsToShow = 5;
 
   // Update page and row when data is updated

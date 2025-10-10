@@ -65,21 +65,33 @@ const HeaderSimple = () => {
               <span className="font-bold leading-[15px]">tu ubicación</span>
             </div>
           </Button> */}
-          <Button
-            type="primary"
-            className="flex items-center text-sm"
-            onClick={() => navigate("/login")}
-          >
-            <User />
-            <div className="flex flex-col items-start">
-              <span className="font-bold leading-[15px]">
-                {auth.isAuthenticated ? "Hola," : "Hola!"}
-              </span>
-              <span className="font-bold leading-[15px]">
-                {auth.isAuthenticated ? `${auth.user?.name}` : "Inicia sesión"}
-              </span>
-            </div>
-          </Button>
+          {auth.isAuthenticated ? (
+            <Button
+              type="primary"
+              className="flex items-center text-sm"
+              onClick={() => navigate("/panel/perfil")}
+            >
+              <User />
+              <div className="flex flex-col items-start">
+                <span className="font-bold leading-[15px]">Hola,</span>
+                <span className="font-bold leading-[15px]">
+                  {auth.user?.name.split(" ")[0] || "-"}
+                </span>
+              </div>
+            </Button>
+          ) : (
+            <Button
+              type="primary"
+              className="flex items-center text-sm"
+              onClick={() => navigate("/login")}
+            >
+              <User />
+              <div className="flex flex-col items-start">
+                <span className="font-bold leading-[15px]">Hola!</span>
+                <span className="font-bold leading-[15px]">Inicia sesión</span>
+              </div>
+            </Button>
+          )}
           <button
             type="button"
             className="relative px-10"

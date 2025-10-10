@@ -11,7 +11,7 @@ import Swal from "sweetalert2";
 
 interface PaymentOption {
   id: string;
-  userId: string;
+  businessId: string;
   type: "link" | "transferencia";
   link?: string;
   pasarela?: string;
@@ -43,7 +43,7 @@ interface UseAuth {
   login: (loginData: LoginData) => Promise<User | undefined>;
   logout: () => Promise<void>;
   reLogin: () => Promise<void>;
-  getPaymentOptions: (userId: string) => Promise<PaymentOption[]>;
+  getPaymentOptions: (businessId: string) => Promise<PaymentOption[]>;
   createPaymentOption: (
     data: Omit<PaymentOption, "id" | "createdAt" | "updatedAt">
   ) => Promise<PaymentOption>;
@@ -87,6 +87,7 @@ export const useAuth = (): UseAuth => {
         password,
         role,
       });
+      console.log(response.data);
       if (!response.data?.user) throw new Error("Error to create user");
 
       await login({ email, password });
@@ -110,8 +111,21 @@ export const useAuth = (): UseAuth => {
     setLoading(true);
     try {
       const response = await axios.put("/sesion/complete-registration", {
-        ...registrationData,
-        rol: UserRol.CLIENT,
+        userData: {
+          id: registrationData.id,
+          name: registrationData.name,
+          phone: registrationData.phone,
+          address: registrationData.address,
+          city: registrationData.city,
+          state: registrationData.state,
+          zipCode: registrationData.zipCode,
+          rol: UserRol.CLIENT,
+        },
+        businessData: {
+          name: "Comprador",
+          type: "Comprador",
+          description: "Usuario comprador",
+        },
       });
 
       if (!response.data?.user) throw new Error("Error al completar registro");
@@ -260,10 +274,12 @@ export const useAuth = (): UseAuth => {
   };
 
   const getPaymentOptions = async (
-    userId: string
+    businessId: string
   ): Promise<PaymentOption[]> => {
     try {
-      const response = await axios.get(`/payment-options?userId=${userId}`);
+      const response = await axios.get(
+        `/payment-options?businessId=${businessId}`
+      );
       return response.data;
     } catch (error) {
       console.error("Error getting payment options:", error);

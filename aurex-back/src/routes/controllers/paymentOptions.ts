@@ -1,21 +1,21 @@
-import { PaymentOptions } from "../../db";
+import { PaymentOptions, Business } from "../../db";
 
-const getPaymentOptionsByUser = async (userId: string) => {
-  console.log('Getting payment options for userId:', userId);
+const getPaymentOptionsByBusiness = async (businessId: string) => {
+  console.log('Getting payment options for businessId:', businessId);
   const options = await PaymentOptions.findAll({
-    where: { userId },
+    where: { businessId },
   });
   console.log('Found payment options:', options);
   return options;
 };
 
 const createPaymentOption = async (data: any) => {
-  if (!data.userId) throw new Error("missing parameter (userId)");
+  if (!data.businessId) throw new Error("missing parameter (businessId)");
   if (!data.type) throw new Error("missing parameter (type)");
 
   const newOption = await PaymentOptions.create({
     ...data,
-    UserId: data.userId,
+    BusinessId: data.businessId,
   });
   return newOption;
 };
@@ -37,7 +37,7 @@ const deletePaymentOption = async (id: string) => {
 };
 
 export {
-  getPaymentOptionsByUser,
+  getPaymentOptionsByBusiness,
   createPaymentOption,
   updatePaymentOption,
   deletePaymentOption,

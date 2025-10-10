@@ -6,12 +6,12 @@ const createReception = async (
   data: ReceptionTS,
   productsFile: Express.Multer.File,
   recipeFile: Express.Multer.File,
-  UserId: string
+  BusinessId: string
 ) => {
   // Check parameters
   if (!data.date) throw new Error("missing parameter date");
   if (!data.state) throw new Error("missing parameter state");
-  if (!UserId) throw new Error("UserId  not found");
+  if (!BusinessId) throw new Error("BusinessId not found");
 
   // Create Reception
   const newReception: any = await Reception.create({
@@ -21,8 +21,8 @@ const createReception = async (
     remittance: recipeFile.path,
   });
 
-  // Bind to User
-  newReception.setUser(UserId);
+  // Bind to Business
+  newReception.setBusiness(BusinessId);
 
   return newReception.dataValues;
 };

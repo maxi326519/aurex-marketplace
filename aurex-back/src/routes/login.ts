@@ -1,5 +1,5 @@
-import { loginUser, registerUser } from "./controllers/login";
 import { UserRol, UserStatus, UserTS } from "../interfaces/UserTS";
+import { loginUser, registerUser } from "./controllers/login";
 import { Request, Response } from "express";
 import { verificarToken } from "./controllers/verificacion";
 import { User, Business } from "../db";
@@ -39,10 +39,10 @@ router.post("/signup", async (req: Request, res: Response) => {
       throw new Error("password must be at least 6 characters long");
 
     // Create new the user and login
-    await registerUser(email, password, role);
+    const user = await registerUser(email, password, role);
 
     // Response confirmation
-    res.status(200).json({ message: "User registered successfully" });
+    res.status(200).json({ message: "User registered successfully", user });
   } catch (error: any) {
     console.log(error);
     res
@@ -92,25 +92,23 @@ router.put(
       if (!userData.id) throw new Error("userData.id not found");
       if (!userData.name) throw new Error("userData.name not found");
 
-      // Check business data required
-      if (!businessData) throw new Error("businessData not found");
-      if (!businessData.name) throw new Error("businessData.name not found");
-      if (!businessData.type) throw new Error("businessData.type not found");
-      if (!businessData.description)
-        throw new Error("businessData.description not found");
+      // Check business data required (only for sellers)
+      if (userData.rol === UserRol.SELLER) {
+        if (!businessData) throw new Error("businessData not found");
+        if (!businessData.name) throw new Error("businessData.name not found");
+        if (!businessData.type) throw new Error("businessData.type not found");
+        if (!businessData.description)
+          throw new Error("businessData.description not found");
+      }
 
       // Get user current data
       const currentUser = await User.findByPk(userData.id);
       if (!currentUser) throw new Error("User not found");
-      const businessExist = await Business.findOne({
-        where: { userId: userData.id },
-      });
-      if (businessExist) throw new Error("Business already exists");
 
       // Update user data
       const updatedUser = await currentUser.update({
         name: userData.name,
-        status: UserStatus.WAITING,
+        status: UserStatus.ACTIVE, // Activar directamente para compradores
         photo: userData.photo,
         phone: userData.phone,
         address: userData.address,
@@ -119,30 +117,39 @@ router.put(
         zipCode: userData.zipCode,
       });
 
-      // Create business and connect with the user
-      const business = await Business.create({
-        name: businessData.name,
-        type: businessData.type,
-        description: businessData.description,
-        address: businessData.address,
-        city: businessData.city,
-        state: businessData.state,
-        zipCode: businessData.zipCode,
-        taxId: businessData.taxId,
-        bankAccount: businessData.bankAccount,
-        userId: currentUser.dataValues.id,
-      });
+      let response: any = {
+        user: updatedUser.dataValues,
+      };
 
-      // Connect the business with the user
-      await updatedUser.update({ businessId: business.dataValues.id });
+      // Create business only for sellers
+      if (userData.rol === UserRol.SELLER) {
+        const businessExist = await Business.findOne({
+          where: { userId: userData.id },
+        });
+        if (businessExist) throw new Error("Business already exists");
+
+        const business = await Business.create({
+          name: businessData.name,
+          type: businessData.type,
+          description: businessData.description,
+          address: businessData.address,
+          city: businessData.city,
+          state: businessData.state,
+          zipCode: businessData.zipCode,
+          taxId: businessData.taxId,
+          bankAccount: businessData.bankAccount,
+          userId: currentUser.dataValues.id,
+        });
+
+        // Connect the business with the user
+        await updatedUser.update({ businessId: business.dataValues.id });
+        response.business = business.dataValues;
+      }
 
       // Format user data
       const userResponse = updatedUser.dataValues;
       delete userResponse.password;
-      const response = {
-        user: userResponse,
-        business: business.dataValues,
-      };
+      response.user = userResponse;
 
       res.status(200).json(response);
     } catch (error: any) {

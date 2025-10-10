@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Order, OrderItem, Product, User } from "../../db";
+import { Order, OrderItem, Product, User, Business } from "../../db";
 import { OrdersStatus } from "../../interfaces/OrdersTS";
 
 // Obtener todas las órdenes con filtros opcionales
@@ -25,6 +25,16 @@ export const getAllOrders = async (req: Request, res: Response) => {
               attributes: ["id", "name", "sku", "ean", "category1", "category2", "totalStock", "status"]
             }
           ]
+        },
+        {
+          model: User,
+          as: "User",
+          attributes: ["id", "name", "email"]
+        },
+        {
+          model: Business,
+          as: "Business",
+          attributes: ["id", "name", "type", "address", "city", "state"]
         }
       ],
       limit: Number(limit),
@@ -76,6 +86,16 @@ export const getOrderById = async (req: Request, res: Response) => {
               attributes: ["id", "name", "sku", "ean", "category1", "category2", "totalStock", "status"]
             }
           ]
+        },
+        {
+          model: User,
+          as: "User",
+          attributes: ["id", "name", "email"]
+        },
+        {
+          model: Business,
+          as: "Business",
+          attributes: ["id", "name", "type", "address", "city", "state"]
         }
       ]
     });
@@ -107,7 +127,7 @@ export const getOrderById = async (req: Request, res: Response) => {
 
 // Crear una nueva orden con items
 export const createOrder = async (req: Request, res: Response) => {
-  const { date, status, quantity, supplier, totalAmount, items } = req.body;
+  const { date, status, quantity, supplier, totalAmount, items, userId, businessId } = req.body;
 
   const t = await Order.sequelize?.transaction();
   try {
@@ -116,6 +136,15 @@ export const createOrder = async (req: Request, res: Response) => {
       { date, status, quantity, supplier, totalAmount },
       { transaction: t }
     );
+
+    // Asociar con User (quien crea la orden) y Business (dueño de los productos)
+    if (userId) {
+      await order.update({ userId }, { transaction: t });
+    }
+
+    if (businessId) {
+      await order.update({ businessId }, { transaction: t });
+    }
 
     // Crear los items de la orden
     if (Array.isArray(items)) {
