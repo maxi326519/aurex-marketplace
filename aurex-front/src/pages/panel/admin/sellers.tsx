@@ -1,16 +1,20 @@
+import { Pencil, Trash2, CheckCircle, Ban } from "lucide-react";
 import { User, UserRol, UserStatus } from "../../../interfaces/Users";
-import { Pencil, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import useSellers from "../../../hooks/Dashboard/sellers/useSellers";
+import Swal from "sweetalert2";
 
 import DashboardLayout from "../../../components/Dashboard/AdminDashboard";
 import Table from "../../../components/Dashboard/Table/Table";
 import UserForm from "../../../components/Dashboard/Forms/UserForm";
 import Controls from "../../../components/Dashboard/Controls/Controls";
+import UserStatusModal from "../../../components/Dashboard/Modals/UserStatusModal";
 
 const tableColumns = (
   handleEdit: (data: User) => void,
-  handleDelete: (data: User) => void
+  handleDelete: (data: User) => void,
+  handleEnable: (data: User) => void,
+  handleBlock: (data: User) => void
 ) => [
   { header: "Nombre", key: "name" },
   { header: "Email", key: "email" },
@@ -20,7 +24,7 @@ const tableColumns = (
     render: (row: User) => {
       const statusColors: Record<UserStatus, string> = {
         [UserStatus.WAITING]: "bg-yellow-100 text-yellow-600",
-        [UserStatus.ACTIVE]: "bg-green-100 text-green-600",
+        [UserStatus.ACTIVE]: "bg-blue-100 text-blue-600",
         [UserStatus.BLOCKED]: "bg-red-100 text-red-600",
       };
 
@@ -40,6 +44,29 @@ const tableColumns = (
     key: "actions",
     render: (row: User) => (
       <div className="flex gap-2">
+        {row.status !== UserStatus.ACTIVE && (
+          <button
+            type="button"
+            title="Habilitar Usuario"
+            aria-label="Habilitar Usuario"
+            onClick={() => handleEnable(row)}
+            className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition text-sm font-medium"
+          >
+            <CheckCircle className="h-4 w-4 inline mr-1" />
+            Habilitar
+          </button>
+        )}
+        {row.status !== UserStatus.BLOCKED && (
+          <button
+            type="button"
+            title="Bloquear Usuario"
+            aria-label="Bloquear Usuario"
+            onClick={() => handleBlock(row)}
+            className="px-3 py-1 rounded-md text-red-500 hover:text-white hover:bg-red-600 transition text-sm font-medium"
+          >
+            <Ban className="h-4 w-4  inline mr-1" />
+          </button>
+        )}
         <button
           type="button"
           title="Editar"
@@ -67,6 +94,8 @@ export default function SellersPage() {
   const sellers = useSellers();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [selectedUser, setSelectedUser] = useState<User>();
+  const [isEnableModalOpen, setIsEnableModalOpen] = useState<boolean>(false);
+  const [userToEnable, setUserToEnable] = useState<User | null>(null);
 
   useEffect(() => {
     sellers.get();
@@ -106,6 +135,45 @@ export default function SellersPage() {
     sellers.delete(user.id!);
   };
 
+  const handleEnable = (user: User) => {
+    setUserToEnable(user);
+    setIsEnableModalOpen(true);
+  };
+
+  const handleBlock = async (user: User) => {
+    const result = await Swal.fire({
+      title: "¿Bloquear usuario?",
+      text: `¿Estás seguro de que quieres bloquear a ${user.name}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, bloquear",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (result.isConfirmed) {
+      const userToUpdate = sellers.data.find((u) => u.id === user.id);
+      if (userToUpdate) {
+        const updatedUser = { ...userToUpdate, status: UserStatus.BLOCKED };
+        await sellers.update(updatedUser);
+        Swal.fire(
+          "Bloqueado",
+          "El usuario ha sido bloqueado exitosamente.",
+          "success"
+        );
+      }
+    }
+  };
+
+  const handleEnableUser = async (userId: string) => {
+    const userToUpdate = sellers.data.find((user) => user.id === userId);
+    if (userToUpdate) {
+      const updatedUser = { ...userToUpdate, status: UserStatus.ACTIVE };
+      await sellers.update(updatedUser);
+    }
+  };
+
   return (
     <DashboardLayout title="Vendedores">
       {isOpen && (
@@ -113,6 +181,16 @@ export default function SellersPage() {
           data={selectedUser}
           onClose={() => setIsOpen(false)}
           onSubmit={handleSubmit}
+        />
+      )}
+      {isEnableModalOpen && (
+        <UserStatusModal
+          onClose={() => {
+            setIsEnableModalOpen(false);
+            setUserToEnable(null);
+          }}
+          user={userToEnable}
+          onEnableUser={handleEnableUser}
         />
       )}
       <div className="flex flex-col gap-2">
@@ -130,7 +208,12 @@ export default function SellersPage() {
           ]}
         />
         <Table
-          columns={tableColumns(handleOpenEdit, handleDelete)}
+          columns={tableColumns(
+            handleOpenEdit,
+            handleDelete,
+            handleEnable,
+            handleBlock
+          )}
           data={sellers.data.filter((seller) => seller.rol === UserRol.SELLER)}
         />
       </div>

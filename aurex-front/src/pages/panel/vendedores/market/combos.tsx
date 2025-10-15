@@ -15,7 +15,7 @@ export default function SellersProductsCombosPage() {
   const rows: [] = [];
 
   return (
-    <DashboardLayout title="Productos / Combos">
+    <DashboardLayout title="Productos / Combos" requireActiveUser={true}>
       <div className="flex flex-col gap-3">
         <Table columns={tableColumns} data={rows} />
       </div>

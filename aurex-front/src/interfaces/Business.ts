@@ -9,6 +9,7 @@ export interface Business {
   zipCode: string;
   taxId: string;
   bankAccount: string;
+  averageScore?: number;
   userId?: string;
 }
 
@@ -22,4 +23,5 @@ export const initBusiness = (): Business => ({
   zipCode: "",
   taxId: "",
   bankAccount: "",
+  averageScore: 0,
 });

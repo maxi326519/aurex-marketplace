@@ -27,7 +27,7 @@ export default function SellerOrdersPage() {
   }
 
   return (
-    <DashboardLayout title="Ventas / Pedidos">
+    <DashboardLayout title="Ventas / Pedidos" requireActiveUser={true}>
       <div className="flex justify-end pb-4">
         <Button type="primary" onClick={handleGetData}>
           <RefreshCcw />

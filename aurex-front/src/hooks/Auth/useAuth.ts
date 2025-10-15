@@ -9,19 +9,6 @@ import {
 } from "../../interfaces/Users";
 import Swal from "sweetalert2";
 
-interface PaymentOption {
-  id: string;
-  businessId: string;
-  type: "link" | "transferencia";
-  link?: string;
-  pasarela?: string;
-  cvu?: string;
-  cbu?: string;
-  otrosDatos?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 interface UseAuth {
   user: User | null;
   business: Business | null;
@@ -43,15 +30,6 @@ interface UseAuth {
   login: (loginData: LoginData) => Promise<User | undefined>;
   logout: () => Promise<void>;
   reLogin: () => Promise<void>;
-  getPaymentOptions: (businessId: string) => Promise<PaymentOption[]>;
-  createPaymentOption: (
-    data: Omit<PaymentOption, "id" | "createdAt" | "updatedAt">
-  ) => Promise<PaymentOption>;
-  updatePaymentOption: (
-    id: string,
-    data: Partial<PaymentOption>
-  ) => Promise<PaymentOption>;
-  deletePaymentOption: (id: string) => Promise<void>;
 }
 
 export const useAuth = (): UseAuth => {
@@ -273,53 +251,6 @@ export const useAuth = (): UseAuth => {
     }
   };
 
-  const getPaymentOptions = async (
-    businessId: string
-  ): Promise<PaymentOption[]> => {
-    try {
-      const response = await axios.get(
-        `/payment-options?businessId=${businessId}`
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Error getting payment options:", error);
-      throw error;
-    }
-  };
-
-  const createPaymentOption = async (
-    data: Omit<PaymentOption, "id" | "createdAt" | "updatedAt">
-  ): Promise<PaymentOption> => {
-    try {
-      const response = await axios.post("/payment-options", data);
-      return response.data;
-    } catch (error) {
-      console.error("Error creating payment option:", error);
-      throw error;
-    }
-  };
-
-  const updatePaymentOption = async (
-    id: string,
-    data: Partial<PaymentOption>
-  ): Promise<PaymentOption> => {
-    try {
-      const response = await axios.put(`/payment-options/${id}`, data);
-      return response.data;
-    } catch (error) {
-      console.error("Error updating payment option:", error);
-      throw error;
-    }
-  };
-
-  const deletePaymentOption = async (id: string): Promise<void> => {
-    try {
-      await axios.delete(`/payment-options/${id}`);
-    } catch (error) {
-      console.error("Error deleting payment option:", error);
-      throw error;
-    }
-  };
 
   return {
     user,
@@ -333,9 +264,5 @@ export const useAuth = (): UseAuth => {
     login,
     logout,
     reLogin,
-    getPaymentOptions,
-    createPaymentOption,
-    updatePaymentOption,
-    deletePaymentOption,
   };
 };

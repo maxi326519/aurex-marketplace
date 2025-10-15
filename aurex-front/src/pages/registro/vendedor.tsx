@@ -1,6 +1,6 @@
+import { User, UserRol, UserStatus, initUser } from "../../interfaces/Users";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { Business, initBusiness } from "../../interfaces/Business";
-import { User, UserRol, initUser } from "../../interfaces/Users";
 import { PaymentOption } from "../../interfaces/PaymentOption";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -13,14 +13,17 @@ import Button from "../../components/ui/Button";
 
 export default function VendedorRegister() {
   const navigate = useNavigate();
-  const { completeVendedorRegistration, loading, user } = useAuth();
+  const { completeVendedorRegistration, createPaymentOption, loading, user, business } = useAuth();
 
   // Estados para el flujo de pasos
   const [currentStep, setCurrentStep] = useState(1);
   const [error, setError] = useState<string>("");
 
   // Estados para cada paso
-  const [personalData, setPersonalData] = useState<User>(initUser());
+  const [personalData, setPersonalData] = useState<User>({
+    ...initUser(),
+    status: UserStatus.WAITING,
+  });
   const [businessData, setBusinessData] = useState<Business>(initBusiness());
   const [paymentOptions, setPaymentOptions] = useState<PaymentOption[]>([]);
 
@@ -66,7 +69,7 @@ export default function VendedorRegister() {
 
     const newOption: PaymentOption = {
       id: Date.now().toString(),
-      userId: personalData.id || "",
+      businessId: "", // Se asignará después del registro del negocio
       type: "link",
       link: linkForm.link,
       pasarela: linkForm.pasarela,
@@ -83,7 +86,7 @@ export default function VendedorRegister() {
 
     const newOption: PaymentOption = {
       id: Date.now().toString(),
-      userId: personalData.id || "",
+      businessId: "", // Se asignará después del registro del negocio
       type: "transferencia",
       cvu: transferForm.cvu,
       cbu: transferForm.cbu,
@@ -102,6 +105,21 @@ export default function VendedorRegister() {
 
   // Funciones de navegación entre pasos
   const nextStep = () => {
+    if (currentStep === 1) {
+      // Validar paso 1: datos personales
+      if (!personalData.name || !personalData.phone) {
+        setError("Por favor completa el nombre y teléfono");
+        return;
+      }
+    } else if (currentStep === 2) {
+      // Validar paso 2: datos del negocio
+      if (!businessData.name || !businessData.type || !businessData.description) {
+        setError("Por favor completa el nombre, tipo y descripción del negocio");
+        return;
+      }
+    }
+    
+    setError(""); // Limpiar errores si la validación pasa
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     }
@@ -117,8 +135,16 @@ export default function VendedorRegister() {
     try {
       setError("");
 
-      console.log(personalData);
-      console.log(user);
+      // Validar datos requeridos
+      if (!personalData.name || !personalData.phone) {
+        setError("Por favor completa todos los campos obligatorios");
+        return;
+      }
+
+      if (!businessData.name || !businessData.type || !businessData.description) {
+        setError("Por favor completa todos los campos del negocio");
+        return;
+      }
 
       // Add current user data
       const userData: User = {
@@ -126,12 +152,32 @@ export default function VendedorRegister() {
         id: user?.id!,
         email: user?.email!,
         rol: UserRol.SELLER,
+        status: UserStatus.WAITING,
       };
 
       // Complete registration
-      await completeVendedorRegistration(userData, businessData).then(() => {
-        navigate("/panel/vendedor/analiticas");
-      });
+      await completeVendedorRegistration(userData, businessData);
+      
+      // Crear opciones de pago si existen
+      if (paymentOptions.length > 0) {
+        // Esperar un momento para que el negocio se actualice en el store
+        setTimeout(async () => {
+          try {
+            for (const option of paymentOptions) {
+              if (business?.id) {
+                await createPaymentOption({
+                  ...option,
+                  businessId: business.id,
+                });
+              }
+            }
+          } catch (error) {
+            console.error("Error creando opciones de pago:", error);
+          }
+        }, 1000);
+      }
+      
+      navigate("/panel/vendedor/analiticas");
     } catch (error) {
       console.error("Error al completar registro:", error);
       setError(
@@ -186,14 +232,14 @@ export default function VendedorRegister() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
                   name="name"
-                  label="Nombre completo"
+                  label="Nombre completo *"
                   value={personalData.name}
                   onChange={handlePersonalDataChange}
                   disabled={loading}
                 />
                 <Input
                   name="phone"
-                  label="Teléfono"
+                  label="Teléfono *"
                   type="tel"
                   value={personalData.phone || ""}
                   onChange={handlePersonalDataChange}
@@ -253,14 +299,14 @@ export default function VendedorRegister() {
             <div className="space-y-4">
               <Input
                 name="name"
-                label="Nombre del negocio"
+                label="Nombre del negocio *"
                 value={businessData.name}
                 onChange={handleBusinessDataChange}
                 disabled={loading}
               />
               <Input
                 name="type"
-                label="Tipo de negocio"
+                label="Tipo de negocio *"
                 value={businessData.type}
                 onChange={handleBusinessDataChange}
                 disabled={loading}
@@ -270,7 +316,7 @@ export default function VendedorRegister() {
                   htmlFor="description"
                   className="absolute top-1 left-2 text-xs text-gray-500 font-medium"
                 >
-                  Descripción del negocio
+                  Descripción del negocio *
                 </label>
                 <textarea
                   id="description"
@@ -280,12 +326,13 @@ export default function VendedorRegister() {
                   value={businessData.description}
                   onChange={handleBusinessTextareaChange}
                   disabled={loading}
+                  required
                 />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
                   name="taxId"
-                  label="RFC / Tax ID"
+                  label="CUIT/CUIL"
                   value={businessData.taxId}
                   onChange={handleBusinessDataChange}
                   disabled={loading}

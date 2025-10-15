@@ -61,10 +61,18 @@ export const {
   Order,
   OrderItem,
   Reception,
+  Report,
+  Review,
+  Chat,
+  Message,
 } = sequelize.models;
 
 User.hasOne(Business);
 User.hasMany(Order); // Usuario que crea la orden
+User.hasMany(Report); // Usuario que crea el reporte
+User.hasMany(Review); // Usuario que crea la reseña
+User.hasMany(Chat); // Usuario que participa en el chat
+User.hasMany(Message); // Usuario que envía mensajes
 
 Business.belongsTo(User);
 Business.hasMany(Movements);
@@ -73,6 +81,10 @@ Business.hasMany(PaymentOptions);
 Business.hasMany(Product);
 Business.hasMany(Post);
 Business.hasMany(Order); // Business dueño de los productos en la orden
+Business.hasMany(Report); // Business reportado
+Business.hasMany(Chat); // Business que participa en el chat
+Business.hasMany(Message); // Business que envía mensajes
+Business.hasMany(Review); // Business que recibe reseñas
 
 Storage.hasMany(Stock);
 Storage.hasMany(Movements);
@@ -90,6 +102,7 @@ Stock.hasMany(Movements);
 
 Post.belongsTo(Product, { foreignKey: "productId", as: "product" });
 Post.belongsTo(Business); // Post pertenece a un Business
+Post.hasMany(Review); // Post tiene muchas reseñas
 
 Movements.belongsTo(Business); // Movement pertenece a un Business
 Movements.belongsTo(Storage);
@@ -103,8 +116,32 @@ Reception.belongsTo(Business); // Reception pertenece a un Business
 Order.belongsTo(User); // Usuario que crea la orden
 Order.belongsTo(Business); // Business dueño de los productos
 Order.hasMany(OrderItem, { foreignKey: "orderId", as: "items" });
+Order.hasMany(Report); // Orden puede tener reportes
 OrderItem.belongsTo(Order, { foreignKey: "orderId" });
 OrderItem.belongsTo(Product, { foreignKey: "productId", as: "product" });
+
+// Conexiones para Report
+Report.belongsTo(User); // Usuario que crea el reporte
+Report.belongsTo(Business); // Business reportado
+Report.belongsTo(Order); // Orden relacionada al reporte
+Report.belongsTo(Chat); // Chat asociado al reporte (opcional)
+
+// Conexiones para Review
+Review.belongsTo(User); // Usuario que crea la reseña
+Review.belongsTo(Post); // Post reseñado
+
+// Conexiones para Chat
+Chat.belongsTo(User); // Usuario que participa en el chat
+Chat.belongsTo(Business); // Business que participa en el chat (opcional)
+Chat.belongsTo(User, { foreignKey: "AdminId", as: "Admin" }); // Admin que participa en el chat (opcional)
+Chat.belongsTo(Report); // Reporte asociado al chat (opcional)
+Chat.hasMany(Message); // Chat tiene muchos mensajes
+
+// Conexiones para Message
+Message.belongsTo(Chat); // Mensaje pertenece a un chat
+Message.belongsTo(User); // Usuario que envía el mensaje (opcional)
+Message.belongsTo(Business); // Business que envía el mensaje (opcional)
+Message.belongsTo(User, { foreignKey: "AdminId", as: "Admin" }); // Admin que envía el mensaje (opcional)
 
 export const conn = sequelize;
 export const models = sequelize.models;

@@ -51,7 +51,7 @@ export default function SellersImportsPage() {
   }
 
   return (
-    <DashboardLayout title="Productos / Importación">
+    <DashboardLayout title="Productos / Importación" requireActiveUser={true}>
       {productsFile && (
         <div className="flex gap-4 pb-4 border-b border-gray-300">
           <div

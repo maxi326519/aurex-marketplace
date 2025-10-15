@@ -1,34 +1,17 @@
-import { UserRol, UserStatus, User as UserInterface } from "../../../interfaces/Users";
-import { Business } from "../../../interfaces/Business";
 import { useState, useEffect } from "react";
-import { PaymentOption } from "../../../interfaces/PaymentOption";
+import { Business } from "../../../interfaces/Business";
 import { useAuth } from "../../../hooks/Auth/useAuth";
+import { useBusiness } from "../../../hooks/Dashboard/useBusiness";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../../components/ui/card";
-import {
-  User as UserIcon,
-  Edit,
-  Package,
-  TrendingUp,
-  DollarSign,
-  Star,
-  ShoppingCart,
-  BarChart3,
-  Target,
-  CreditCard,
-  Link as LinkIcon,
-  Banknote,
-  Save,
-  X,
-} from "lucide-react";
+  UserRol,
+  UserStatus,
+  User as UserInterface,
+} from "../../../interfaces/Users";
 
 import DashboardLayout from "../../../components/Dashboard/SellerDashboard";
-import Button from "../../../components/ui/Button";
-import Input from "../../../components/ui/Inputs/Input";
+import UserProfile from "../../../components/Dashboard/profile/UserProfile";
+import SellerProfileForm from "../../../components/Dashboard/profile/SellerProfileForm";
+import PaymentOptionsForm from "../../../components/Dashboard/profile/PaymentOptionsForm";
 
 export interface User {
   id?: string;
@@ -43,25 +26,19 @@ export interface User {
   joinDate?: string;
 }
 
-interface AnalyticsData {
-  totalProducts: number;
-  totalSales: number;
-  totalRevenue: number;
-  conversionRate: number;
-  averageRating: number;
-  monthlyVisitors: number;
-}
-
 export default function SellerProfilePage() {
+  const { user } = useAuth();
   const {
-    user,
     business,
-    getPaymentOptions,
+    paymentOptions,
+    loading,
+    createBusiness,
+    getBusiness,
+    updateBusiness,
     createPaymentOption,
     deletePaymentOption,
-  } = useAuth();
-  const [paymentOptions, setPaymentOptions] = useState<PaymentOption[]>([]);
-  const [loading, setLoading] = useState(false);
+    refreshPaymentOptions,
+  } = useBusiness();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -69,80 +46,92 @@ export default function SellerProfilePage() {
   const [editedUser, setEditedUser] = useState<UserInterface | null>(null);
   const [editedBusiness, setEditedBusiness] = useState<Business | null>(null);
 
-  // Form states
-  const [linkForm, setLinkForm] = useState({ link: "", pasarela: "" });
-  const [transferForm, setTransferForm] = useState({
-    cvu: "",
-    cbu: "",
-    otrosDatos: "",
-  });
+  useEffect(() => {
+    console.log("Business:", business);
+  }, [business]);
+
+  useEffect(() => {
+    console.log("User:", user);
+  }, [user]);
 
   useEffect(() => {
     if (user?.id) {
-      loadPaymentOptions();
+      loadData();
       // Inicializar datos para edición
       setEditedUser(user);
       setEditedBusiness(business);
     }
   }, [user, business]);
 
-  const loadPaymentOptions = async () => {
-    if (!user?.id) return;
+  const loadData = async () => {
+    if (!user?.businessId) return;
+
     try {
-      console.log("Loading payment options for user:", user.id);
-      const options = await getPaymentOptions(user.id);
-      console.log("Payment options loaded:", options);
-      setPaymentOptions(options);
+      // Cargar datos del negocio si no existen
+      if (!business) {
+        await getBusiness(user.businessId);
+      }
+
+      // Cargar opciones de pago
+      if (business?.id) {
+        await refreshPaymentOptions();
+      }
     } catch (error) {
-      console.error("Error loading payment options:", error);
+      console.error("Error loading data:", error);
     }
   };
 
-  const handleCreateLink = async () => {
+  const handleCreateBusiness = async (data: Omit<Business, 'id' | 'averageScore' | 'userId'>) => {
     if (!user?.id) return;
-    setLoading(true);
+
     try {
-      console.log("Creating link payment option for user:", user.id);
+      const newBusiness = await createBusiness(data);
+      console.log("Business created:", newBusiness);
+    } catch (error) {
+      console.error("Error creating business:", error);
+      throw error; // Re-throw para que el modal maneje el error
+    }
+  };
+
+  const handleCreateLink = async (data: { link: string; pasarela: string }) => {
+    console.log("Creating link", business?.id);
+    if (!business?.id) return;
+
+    try {
       await createPaymentOption({
-        userId: user.id,
+        businessId: business.id,
         type: "link",
-        link: linkForm.link,
-        pasarela: linkForm.pasarela,
+        link: data.link,
+        pasarela: data.pasarela,
       });
-      console.log("Link payment option created successfully");
-      setLinkForm({ link: "", pasarela: "" });
-      loadPaymentOptions();
     } catch (error) {
       console.error("Error creating link payment option:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleCreateTransfer = async () => {
-    if (!user?.id) return;
-    setLoading(true);
+  const handleCreateTransfer = async (data: {
+    cvu: string;
+    cbu: string;
+    otrosDatos: string;
+  }) => {
+    if (!business?.id) return;
+
     try {
       await createPaymentOption({
-        userId: user.id,
+        businessId: business.id,
         type: "transferencia",
-        cvu: transferForm.cvu,
-        cbu: transferForm.cbu,
-        otrosDatos: transferForm.otrosDatos,
+        cvu: data.cvu,
+        cbu: data.cbu,
+        otrosDatos: data.otrosDatos,
       });
-      setTransferForm({ cvu: "", cbu: "", otrosDatos: "" });
-      loadPaymentOptions();
     } catch (error) {
       console.error("Error creating transfer payment option:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleDeleteOption = async (id: string) => {
     try {
       await deletePaymentOption(id);
-      loadPaymentOptions();
     } catch (error) {
       console.error("Error deleting payment option:", error);
     }
@@ -164,52 +153,42 @@ export default function SellerProfilePage() {
   const handleUserDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!editedUser) return;
     const { name, value } = e.target;
-    setEditedUser(prev => prev ? { ...prev, [name]: value } : null);
+    setEditedUser((prev) => (prev ? { ...prev, [name]: value } : null));
   };
 
   const handleBusinessDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!editedBusiness) return;
     const { name, value } = e.target;
-    setEditedBusiness(prev => prev ? { ...prev, [name]: value } : null);
+    setEditedBusiness((prev) => (prev ? { ...prev, [name]: value } : null));
   };
 
-  const handleBusinessTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleBusinessTextareaChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
     if (!editedBusiness) return;
     const { name, value } = e.target;
-    setEditedBusiness(prev => prev ? { ...prev, [name]: value } : null);
+    setEditedBusiness((prev) => (prev ? { ...prev, [name]: value } : null));
   };
 
   const handleSaveChanges = async () => {
-    if (!editedUser) return;
-    
+    if (!editedUser || !editedBusiness) return;
+
     setSaving(true);
     try {
-      // Aquí deberías implementar la lógica para guardar los cambios
-      // await updateUser(editedUser);
-      // if (editedBusiness) {
-      //   await updateBusiness(editedBusiness);
-      // }
-      
+      // Actualizar datos del negocio
+      if (business?.id) {
+        await updateBusiness(business.id, editedBusiness);
+      }
+
       console.log("Saving user data:", editedUser);
       console.log("Saving business data:", editedBusiness);
-      
+
       setEditing(false);
-      // Actualizar el usuario en el contexto
-      // setUser(editedUser);
     } catch (error) {
       console.error("Error saving changes:", error);
     } finally {
       setSaving(false);
     }
-  };
-
-  const analytics: AnalyticsData = {
-    totalProducts: 42,
-    totalSales: 154,
-    totalRevenue: 12500,
-    conversionRate: 3.2,
-    averageRating: 4.8,
-    monthlyVisitors: 2450,
   };
 
   if (!user) {
@@ -222,475 +201,46 @@ export default function SellerProfilePage() {
 
   return (
     <DashboardLayout title="Perfil comercial">
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Perfil Comercial - Izquierda */}
-        <div className="w-full lg:w-1/3">
-          <Card className="h-full">
-            <CardHeader className="flex flex-row items-center justify-between pb-4">
-              <CardTitle className="text-lg font-semibold">
-                Perfil Comercial
-              </CardTitle>
-              {!editing ? (
-                <Button type="primary" onClick={handleEditClick}>
-                  <Edit size={16} />
-                  Editar
-                </Button>
-              ) : (
-                <div className="flex gap-2">
-                  <Button
-                    type="secondary"
-                    variant="outline"
-                    onClick={handleCancelEdit}
-                    disabled={saving}
-                  >
-                    <X size={16} />
-                    Cancelar
-                  </Button>
-                  <Button
-                    type="primary"
-                    onClick={handleSaveChanges}
-                    loading={saving}
-                  >
-                    <Save size={16} />
-                    Guardar
-                  </Button>
-                </div>
-              )}
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-col items-center text-center">
-                <div className="relative mb-4">
-                  <img
-                    src={user.photo || "/api/placeholder/100/100"}
-                    alt={user.name}
-                    className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
-                  />
-                  <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-1">
-                    <UserIcon size={16} className="text-white" />
-                  </div>
-                </div>
-
-                {editing ? (
-                  <div className="w-full space-y-3">
-                    <Input
-                      name="name"
-                      label="Nombre completo"
-                      value={editedUser?.name || ""}
-                      onChange={handleUserDataChange}
-                      disabled={saving}
-                    />
-                    <Input
-                      name="email"
-                      label="Email"
-                      type="email"
-                      value={editedUser?.email || ""}
-                      onChange={handleUserDataChange}
-                      disabled={saving}
-                    />
-                    <Input
-                      name="phone"
-                      label="Teléfono"
-                      value={editedUser?.phone || ""}
-                      onChange={handleUserDataChange}
-                      disabled={saving}
-                    />
-                  </div>
-                ) : (
-                  <>
-                    <h2 className="text-xl font-bold">{user.name}</h2>
-                    <p className="text-gray-600">{user.email}</p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Vendedor desde: {new Date().toLocaleDateString()}
-                    </p>
-
-                    <div className="flex items-center gap-1 mt-2">
-                      <Star size={16} className="fill-yellow-400 text-yellow-400" />
-                      <span className="font-semibold">4.8</span>
-                      <span className="text-gray-500">(154 ventas)</span>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              <div className="border-t pt-4 space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Estado:</span>
-                  <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
-                    {user.status}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Rol:</span>
-                  <span className="font-medium capitalize">{user.rol}</span>
-                </div>
-              </div>
-
-              {/* Información del negocio */}
-              <div className="border-t pt-4 space-y-3">
-                <h3 className="font-medium text-gray-700">Información del Negocio</h3>
-                
-                {editing ? (
-                  <>
-                    <Input
-                      name="name"
-                      label="Nombre del negocio"
-                      value={editedBusiness?.name || ""}
-                      onChange={handleBusinessDataChange}
-                      disabled={saving}
-                    />
-                    <Input
-                      name="type"
-                      label="Tipo de negocio"
-                      value={editedBusiness?.type || ""}
-                      onChange={handleBusinessDataChange}
-                      disabled={saving}
-                    />
-                    <div className="relative flex flex-col overflow-hidden">
-                      <label
-                        htmlFor="description"
-                        className="absolute top-1 left-2 text-xs text-gray-500 font-medium"
-                      >
-                        Descripción del negocio
-                      </label>
-                      <textarea
-                        id="description"
-                        name="description"
-                        className="text-black p-2 pt-5 focus:outline-none rounded-lg border border-gray-200 bg-white min-h-[80px] disabled:opacity-50"
-                        placeholder="Descripción del negocio"
-                        value={editedBusiness?.description || ""}
-                        onChange={handleBusinessTextareaChange}
-                        disabled={saving}
-                      />
-                    </div>
-                    <div className="grid grid-cols-1 gap-3">
-                      <Input
-                        name="taxId"
-                        label="RFC / Tax ID"
-                        value={editedBusiness?.taxId || ""}
-                        onChange={handleBusinessDataChange}
-                        disabled={saving}
-                      />
-                      <Input
-                        name="bankAccount"
-                        label="Cuenta bancaria"
-                        value={editedBusiness?.bankAccount || ""}
-                        onChange={handleBusinessDataChange}
-                        disabled={saving}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    {business ? (
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Nombre:</span>
-                          <span className="font-medium">{business.name}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Tipo:</span>
-                          <span className="font-medium">{business.type}</span>
-                        </div>
-                        {business.description && (
-                          <div className="flex flex-col">
-                            <span className="text-gray-600 mb-1">Descripción:</span>
-                            <span className="text-sm text-gray-700">{business.description}</span>
-                          </div>
-                        )}
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">RFC:</span>
-                          <span className="font-medium">{business.taxId}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Cuenta bancaria:</span>
-                          <span className="font-medium">{business.bankAccount}</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-4">
-                        <p className="text-gray-500 text-sm">
-                          No hay información del negocio disponible
-                        </p>
-                        <p className="text-gray-400 text-xs mt-1">
-                          Completa tu perfil para agregar esta información
-                        </p>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Opciones de Pago */}
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard size={20} />
-                Opciones de Pago
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Opciones existentes */}
-              {paymentOptions.map((option) => (
-                <div key={option.id} className="border rounded p-3">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      {option.type === "link" ? (
-                        <LinkIcon size={16} />
-                      ) : (
-                        <Banknote size={16} />
-                      )}
-                      <span className="font-medium capitalize">
-                        {option.type}
-                      </span>
-                    </div>
-                    <Button
-                      type="secondary"
-                      variant="outline"
-                      onClick={() => handleDeleteOption(option.id)}
-                    >
-                      Eliminar
-                    </Button>
-                  </div>
-                  {option.type === "link" && (
-                    <div className="mt-2 text-sm">
-                      <p>Link: {option.link}</p>
-                      <p>Pasarela: {option.pasarela}</p>
-                    </div>
-                  )}
-                  {option.type === "transferencia" && (
-                    <div className="mt-2 text-sm">
-                      <p>CVU: {option.cvu}</p>
-                      <p>CBU: {option.cbu}</p>
-                      {option.otrosDatos && <p>Otros: {option.otrosDatos}</p>}
-                    </div>
-                  )}
-                </div>
-              ))}
-
-              {/* Formulario Link */}
-              <div className="border-t pt-4">
-                <h4 className="font-medium mb-2">Agregar Pago por Link</h4>
-                <div className="space-y-2">
-                  <Input
-                    name="link"
-                    label="Link de pago"
-                    value={linkForm.link}
-                    onChange={(e) =>
-                      setLinkForm((prev) => ({ ...prev, link: e.target.value }))
-                    }
-                  />
-                  <Input
-                    name="pasarela"
-                    label="Pasarela de pago"
-                    value={linkForm.pasarela}
-                    onChange={(e) =>
-                      setLinkForm((prev) => ({
-                        ...prev,
-                        pasarela: e.target.value,
-                      }))
-                    }
-                  />
-                  <Button
-                    type="primary"
-                    onClick={handleCreateLink}
-                    disabled={loading || !linkForm.link}
-                    className="w-full"
-                  >
-                    Agregar Link
-                  </Button>
-                </div>
-              </div>
-
-              {/* Formulario Transferencia */}
-              <div className="border-t pt-4">
-                <h4 className="font-medium mb-2">
-                  Agregar Transferencia/Efectivo
-                </h4>
-                <div className="space-y-2">
-                  <Input
-                    name="cvu"
-                    label="CVU"
-                    value={transferForm.cvu}
-                    onChange={(e) =>
-                      setTransferForm((prev) => ({
-                        ...prev,
-                        cvu: e.target.value,
-                      }))
-                    }
-                  />
-                  <Input
-                    name="cbu"
-                    label="CBU"
-                    value={transferForm.cbu}
-                    onChange={(e) =>
-                      setTransferForm((prev) => ({
-                        ...prev,
-                        cbu: e.target.value,
-                      }))
-                    }
-                  />
-                  <Input
-                    name="otrosDatos"
-                    label="Otros datos"
-                    value={transferForm.otrosDatos}
-                    onChange={(e) =>
-                      setTransferForm((prev) => ({
-                        ...prev,
-                        otrosDatos: e.target.value,
-                      }))
-                    }
-                  />
-                  <Button
-                    type="primary"
-                    onClick={handleCreateTransfer}
-                    disabled={
-                      loading || (!transferForm.cvu && !transferForm.cbu)
-                    }
-                    className="w-full"
-                  >
-                    Agregar Transferencia
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full h-full">
+        {/* User Profile - Ocupa 2 columnas en mobile, 1 en desktop */}
+        <div className="lg:col-span-1">
+          <UserProfile
+            user={user}
+            editing={editing}
+            saving={saving}
+            onEditClick={handleEditClick}
+            onCancelEdit={handleCancelEdit}
+            onSaveChanges={handleSaveChanges}
+            onUserDataChange={handleUserDataChange}
+            editedUser={editedUser}
+          />
         </div>
 
-        {/* Analíticas - Derecha */}
-        <div className="w-full lg:w-2/3">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Productos Totales */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Productos Totales
-                </CardTitle>
-                <Package size={16} className="text-blue-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {analytics.totalProducts}
-                </div>
-                <p className="text-xs text-gray-500">+5% desde el mes pasado</p>
-              </CardContent>
-            </Card>
+        {/* Business Profile - Ocupa 2 columnas en mobile, 1 en desktop */}
+        <div className="lg:col-span-1">
+          <SellerProfileForm
+            business={business}
+            editing={editing}
+            saving={saving}
+            onCreateBusiness={handleCreateBusiness}
+            onEditClick={handleEditClick}
+            onCancelEdit={handleCancelEdit}
+            onSaveChanges={handleSaveChanges}
+            onBusinessDataChange={handleBusinessDataChange}
+            onBusinessTextareaChange={handleBusinessTextareaChange}
+            editedBusiness={editedBusiness}
+          />
+        </div>
 
-            {/* Ventas Totales */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Ventas Totales
-                </CardTitle>
-                <ShoppingCart size={16} className="text-green-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{analytics.totalSales}</div>
-                <p className="text-xs text-gray-500">
-                  +12% desde el mes pasado
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Ingresos Totales */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Ingresos Totales
-                </CardTitle>
-                <DollarSign size={16} className="text-amber-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  ${analytics.totalRevenue.toLocaleString()}
-                </div>
-                <p className="text-xs text-gray-500">+8% desde el mes pasado</p>
-              </CardContent>
-            </Card>
-
-            {/* Tasa de Conversión */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Tasa de Conversión
-                </CardTitle>
-                <TrendingUp size={16} className="text-purple-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {analytics.conversionRate}%
-                </div>
-                <p className="text-xs text-gray-500">
-                  Promedio del sector: 2.5%
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Visitantes Mensuales */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Visitantes Mensuales
-                </CardTitle>
-                <BarChart3 size={16} className="text-red-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {analytics.monthlyVisitors.toLocaleString()}
-                </div>
-                <p className="text-xs text-gray-500">
-                  +15% desde el mes pasado
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Rating Promedio */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Rating Promedio
-                </CardTitle>
-                <Star size={16} className="text-yellow-500 fill-yellow-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {analytics.averageRating}/5
-                </div>
-                <p className="text-xs text-gray-500">Basado en 128 opiniones</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Gráfico adicional o más métricas */}
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target size={20} />
-                Rendimiento Mensual
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-40 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
-                Gráfico de rendimiento mensual (implementar con librería de
-                gráficos)
-              </div>
-              <div className="grid grid-cols-3 gap-4 mt-4 text-center">
-                <div>
-                  <div className="text-sm text-gray-600">Ventas este mes</div>
-                  <div className="font-bold text-lg">42</div>
-                </div>
-                <div>
-                  <div className="text-sm text-gray-600">Ingresos este mes</div>
-                  <div className="font-bold text-lg">$3,250</div>
-                </div>
-                <div>
-                  <div className="text-sm text-gray-600">Objetivo cumplido</div>
-                  <div className="font-bold text-lg">78%</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Payment Options - Ocupa 2 columnas en mobile, 2 en desktop */}
+        <div className="lg:col-span-2">
+          <PaymentOptionsForm
+            paymentOptions={paymentOptions}
+            loading={loading}
+            onCreateLink={handleCreateLink}
+            onCreateTransfer={handleCreateTransfer}
+            onDeleteOption={handleDeleteOption}
+          />
         </div>
       </div>
     </DashboardLayout>

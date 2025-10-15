@@ -1,4 +1,5 @@
 import { useRef, useEffect } from "react";
+import { OrdersStatus } from "../../../interfaces/Orders";
 
 import IconMessage from "../../Icons/IconMessage";
 import IconReport from "../../Icons/IconReport";
@@ -7,6 +8,8 @@ import IconStar from "../../Icons/IconStar";
 interface OptionsMenuProps {
   onChat: () => void;
   onReport: () => void;
+  onReview?: () => void;
+  orderStatus: OrdersStatus;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -14,6 +17,8 @@ interface OptionsMenuProps {
 export default function OptionsMenu({
   onChat,
   onReport,
+  onReview,
+  orderStatus,
   isOpen,
   onClose,
 }: OptionsMenuProps) {
@@ -54,28 +59,35 @@ export default function OptionsMenu({
           <IconMessage size={16} />
           <span>Chatear</span>
         </button>
-        <button
-          type="button"
-          onClick={() => {
-            onReport();
-            onClose();
-          }}
-          className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-        >
-          <IconStar size={16} />
-          <span>Agregar reseña</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            onReport();
-            onClose();
-          }}
-          className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-        >
-          <IconReport size={16} />
-          <span>Reportar</span>
-        </button>
+        {/* Solo mostrar reseña y reporte para estados PENDING y COMPLETED */}
+        {(orderStatus === OrdersStatus.PENDING || orderStatus === OrdersStatus.COMPLETED) && (
+          <>
+            {onReview && (
+              <button
+                type="button"
+                onClick={() => {
+                  onReview();
+                  onClose();
+                }}
+                className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                <IconStar size={16} />
+                <span>Agregar reseña</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                onReport();
+                onClose();
+              }}
+              className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+            >
+              <IconReport size={16} />
+              <span>Reportar</span>
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

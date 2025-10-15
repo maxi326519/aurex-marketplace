@@ -56,7 +56,7 @@ export default function SellersNewProductsPage() {
   }
 
   return (
-    <DashboardLayout title="Productos / Alta Manual">
+    <DashboardLayout title="Productos / Alta Manual" requireActiveUser={true}>
       <form className="bg-white p-2 pt-4 pb-6" onSubmit={handleSubmit}>
         <h2 className="p-2 uppercase text-gray-800 font-semibold">Producto</h2>
         <div className="grid grid-cols-2 gap-2 px-4">

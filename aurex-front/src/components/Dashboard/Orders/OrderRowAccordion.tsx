@@ -29,14 +29,15 @@ interface OrderRowAccordionProps {
   isExpanded: boolean;
 }
 
-export default function OrderRowAccordion({ order, isExpanded }: OrderRowAccordionProps) {
+export default function OrderRowAccordion({
+  order,
+  isExpanded,
+}: OrderRowAccordionProps) {
   if (!isExpanded) return null;
 
   return (
     <div className="border-t border-gray-200 bg-gray-50 p-4 overflow-hidden">
-      <h4 className="font-medium text-gray-900 mb-3">
-        Productos del pedido
-      </h4>
+      <h4 className="font-medium text-gray-900 mb-3">Productos del pedido</h4>
       <div className="space-y-3">
         {order.items.map((item, index) => {
           const itemImage = getProductImage(item.product.name);

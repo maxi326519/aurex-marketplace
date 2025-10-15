@@ -1,39 +1,52 @@
 interface TextAreaInputData {
   name: string;
   value: string;
-  label: string;
-  error?: string;
+  label?: string;
+  formulated?: boolean;
   disabled?: boolean;
+  error?: string;
   onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
 }
+
+/**
+ * @prop { string } name - Textarea name and id
+ * @prop { string } value - Textarea value
+ * @prop { string | undefined } label - Textarea label
+ * @prop { string | undefined} error - Error message to display
+ * @prop { boolean | undefined} formulated - If textarea should be disabled
+ * @prop { () => void } onChange - Function for onChange textarea
+ * @prop { boolean | undefined} disabled - If textarea should be disabled
+ */
 export default function TextAreaInput({
   name,
   value,
   label,
-  error,
+  error = "",
+  formulated = false,
   disabled = false,
   onChange,
 }: TextAreaInputData) {
   return (
-    <div className={`form-floating ${name}`}>
+    <div className="relative flex flex-col overflow-hidden">
+      {label && (
+        <label
+          htmlFor={name}
+          className="absolute top-1 left-2 text-xs text-gray-500 font-medium"
+        >
+          {label}
+        </label>
+      )}
       <textarea
         id={name}
         name={name}
-        className={`form-control${error ? " is-invalid" : ""}${
-          disabled ? " disabled bg-red" : ""
+        className={`text-black p-2 pt-5 focus:outline-none rounded-lg border border-gray-200 bg-white min-h-[200px] ${
+          disabled ? "bg-gray-300" : ""
         }`}
-        style={{
-          height: "200px",
-          ...(disabled ? { backgroundColor: "#ddd" } : {}),
-        }}
         value={value}
         onChange={onChange}
-        disabled={disabled}
+        disabled={formulated || disabled}
       />
-      <label htmlFor={name} className="form-label">
-        {label}
-      </label>
-      {error && <small className="text-danger">{error}</small>}
+      <small>{error}</small>
     </div>
   );
 }

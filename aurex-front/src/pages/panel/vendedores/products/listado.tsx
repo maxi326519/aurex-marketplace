@@ -20,7 +20,7 @@ export default function SellersProductsPage() {
   }, []);
 
   return (
-    <DashboardLayout title="Productos / Listado">
+    <DashboardLayout title="Productos / Listado" requireActiveUser={true}>
       <div className="flex flex-col gap-3">
         <Table columns={tableColumns} data={products.data} />
       </div>

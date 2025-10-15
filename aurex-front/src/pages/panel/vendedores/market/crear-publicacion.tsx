@@ -24,7 +24,7 @@ export default function CrearPublicacionPage() {
 
   if (showSuccess) {
     return (
-      <DashboardLayout title="Tienda / Crear Publicación">
+      <DashboardLayout title="Tienda / Crear Publicación" requireActiveUser={true}>
         <div className="flex flex-col items-center justify-center min-h-96">
           <div className="text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -58,7 +58,7 @@ export default function CrearPublicacionPage() {
   }
 
   return (
-    <DashboardLayout title="Tienda / Crear Publicación">
+    <DashboardLayout title="Tienda / Crear Publicación" requireActiveUser={true}>
       <div className="flex flex-col gap-6">
         {/* Formulario */}
         <CreatePostForm onSuccess={handleSuccess} onCancel={handleCancel} />

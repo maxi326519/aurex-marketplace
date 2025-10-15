@@ -43,6 +43,11 @@ export const model = (sequelize: any, DataTypes: any) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      averageScore: {
+        type: DataTypes.DECIMAL(3, 2),
+        allowNull: true,
+        defaultValue: 0.00,
+      },
     },
     { updatedAt: false, timestamps: false }
   );

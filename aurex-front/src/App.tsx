@@ -35,7 +35,9 @@ import CreatePostPage from "./pages/panel/vendedores/market/crear-publicacion";
 import SellersImportsPage from "./pages/panel/vendedores/products/imports";
 
 import ClientsOrdersPage from "./pages/panel/compradores/compras";
+import ComprasChatPage from "./pages/panel/compradores/compras-chat";
 import CompradorPerfilPage from "./pages/panel/compradores/perfil";
+import ReportePage from "./pages/panel/compradores/reporte";
 
 import ReceptionsApproved from "./pages/panel/admin/recepciones/aprobados";
 import ReceptionsHistory from "./pages/panel/admin/recepciones/historial";
@@ -151,7 +153,9 @@ function App() {
 
         {/* Dashboard Compradores */}
         <Route path={"/panel/compras"} element={<ClientsOrdersPage />} />
+        <Route path={"/panel/compras/chat/:chatId"} element={<ComprasChatPage />} />
         <Route path={"/panel/perfil"} element={<CompradorPerfilPage />} />
+        <Route path={"/panel/reporte/:orderId"} element={<ReportePage />} />
       </Routes>
     </div>
   );

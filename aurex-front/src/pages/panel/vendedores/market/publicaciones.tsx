@@ -35,7 +35,7 @@ export default function SellersPostsPage() {
   };
 
   return (
-    <DashboardLayout title="Tienda / Publicaciones">
+    <DashboardLayout title="Tienda / Publicaciones" requireActiveUser={true}>
       <div className="flex flex-col gap-4">
         {/* Header con botón de crear */}
         <div className="flex justify-between items-center">

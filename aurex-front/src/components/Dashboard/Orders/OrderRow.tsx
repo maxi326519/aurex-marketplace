@@ -43,6 +43,7 @@ interface OrderRowProps {
   onToggle: () => void;
   onChat: (orderId: string) => void;
   onReport: (orderId: string) => void;
+  onReview?: (order: OrderManagement) => void;
 }
 
 export default function OrderRow({
@@ -51,6 +52,7 @@ export default function OrderRow({
   onToggle,
   onChat,
   onReport,
+  onReview,
 }: OrderRowProps) {
   const [isOptionsMenuOpen, setIsOptionsMenuOpen] = useState(false);
   const lastItem = order.items[order.items.length - 1];
@@ -58,7 +60,7 @@ export default function OrderRow({
 
   const handleOptionsClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsOptionsMenuOpen(prev => !prev);
+    setIsOptionsMenuOpen((prev) => !prev);
   };
 
   const handleRowClick = () => {
@@ -71,6 +73,12 @@ export default function OrderRow({
 
   const handleReport = () => {
     onReport(order.id);
+  };
+
+  const handleReview = () => {
+    if (onReview) {
+      onReview(order);
+    }
   };
 
   return (
@@ -142,6 +150,8 @@ export default function OrderRow({
                 onClose={() => setIsOptionsMenuOpen(false)}
                 onChat={handleChat}
                 onReport={handleReport}
+                onReview={onReview ? handleReview : undefined}
+                orderStatus={order.status}
               />
             </div>
           </div>

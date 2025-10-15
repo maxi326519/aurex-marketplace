@@ -45,7 +45,7 @@ export default function SellersNewPostPage() {
   };
 
   return (
-    <DashboardLayout title="Mi Tienda / Alta Rápida">
+    <DashboardLayout title="Mi Tienda / Alta Rápida" requireActiveUser={true}>
       <form className="bg-white p-2 pt-4 pb-6" onSubmit={handleSubmit}>
         <h2 className="p-2 uppercase text-gray-800 font-semibold">Producto</h2>
         <div className="flex flex-col gap-2 px-4">

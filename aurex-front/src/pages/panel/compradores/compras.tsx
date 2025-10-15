@@ -1,4 +1,5 @@
 import { OrderManagement } from "../../../interfaces/OrderManagement";
+import { useNavigate } from "react-router-dom";
 import { mockOrders } from "../../../data/mock/orders";
 import { useState } from "react";
 import usePagination from "../../../hooks/Dashboard/usePagination";
@@ -6,9 +7,16 @@ import usePagination from "../../../hooks/Dashboard/usePagination";
 import Pagination from "../../../components/Dashboard/Table/Pagination/Pagination";
 import DashboardLayout from "../../../components/Dashboard/ClientDashboard";
 import OrderRow from "../../../components/Dashboard/Orders/OrderRow";
+import ReviewModal from "../../../components/Dashboard/Modals/ReviewModal";
 
 export default function ClientsOrdersPage() {
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [
+    selectedOrderForReview,
+    setSelectedOrderForReview,
+  ] = useState<OrderManagement | null>(null);
+  const navigate = useNavigate();
 
   // Usar el hook de paginación con los datos de prueba
   const { rows: paginatedOrders, page, setPage } = usePagination<
@@ -21,14 +29,23 @@ export default function ClientsOrdersPage() {
 
   const handleChat = (orderId: string) => {
     console.log("Iniciar chat para el pedido:", orderId);
-    // Aquí se implementaría la lógica para abrir el chat
-    alert(`Iniciando chat para el pedido ${orderId}`);
+    // Navegar a la página de chat con el orderId como chatId
+    navigate(`/panel/compras/chat/${orderId}`);
   };
 
   const handleReport = (orderId: string) => {
     console.log("Reportar pedido:", orderId);
-    // Aquí se implementaría la lógica para reportar el pedido
-    alert(`Reportando pedido ${orderId}`);
+    navigate(`/panel/reporte/${orderId}`);
+  };
+
+  const handleReview = (order: OrderManagement) => {
+    setSelectedOrderForReview(order);
+    setIsReviewModalOpen(true);
+  };
+
+  const handleCloseReviewModal = () => {
+    setIsReviewModalOpen(false);
+    setSelectedOrderForReview(null);
   };
 
   return (
@@ -66,6 +83,7 @@ export default function ClientsOrdersPage() {
                 onToggle={() => toggleOrderExpansion(order.id)}
                 onChat={handleChat}
                 onReport={handleReport}
+                onReview={handleReview}
               />
             ))}
           </div>
@@ -76,6 +94,14 @@ export default function ClientsOrdersPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* Modal de reseñas */}
+      {isReviewModalOpen && (
+        <ReviewModal
+          order={selectedOrderForReview}
+          onClose={handleCloseReviewModal}
+        />
       )}
     </DashboardLayout>
   );

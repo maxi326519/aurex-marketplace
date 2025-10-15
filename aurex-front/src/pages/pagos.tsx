@@ -1,5 +1,6 @@
 import { Link as LinkIcon, Banknote } from "lucide-react";
 import { useState, useEffect } from "react";
+import { PaymentOption } from "../interfaces/PaymentOption";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/Auth/useAuth";
 import useCartStore from "../hooks/Store/useCarrito";
@@ -7,19 +8,6 @@ import useCartStore from "../hooks/Store/useCarrito";
 import Header from "../components/Marketplace/Headers/Header";
 import Footer from "../components/Marketplace/Footer";
 import Button from "../components/ui/Button";
-
-interface PaymentOption {
-  id: string;
-  businessId: string;
-  type: "link" | "transferencia";
-  link?: string;
-  pasarela?: string;
-  cvu?: string;
-  cbu?: string;
-  otrosDatos?: string;
-  createdAt: string;
-  updatedAt: string;
-}
 
 export default function Pagos() {
   const navigate = useNavigate();

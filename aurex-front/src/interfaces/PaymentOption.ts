@@ -1,6 +1,6 @@
 export interface PaymentOption {
-  id: string;
-  userId: string;
+  id?: string;
+  businessId: string;
   type: 'link' | 'transferencia';
   link?: string;
   pasarela?: string;
