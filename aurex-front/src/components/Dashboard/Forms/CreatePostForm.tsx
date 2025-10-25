@@ -95,19 +95,6 @@ export default function CreatePostForm({
     }
   };
 
-  const addImage = () => {
-    setFormData((prev) => ({
-      ...prev,
-      images: [...prev.images, ""],
-    }));
-  };
-
-  const removeImage = (index: number) => {
-    setFormData((prev) => {
-      const newImages = prev.images.filter((_, i) => i !== index);
-      return { ...prev, images: newImages };
-    });
-  };
 
   const handleFeatureChange = (
     index: number,
@@ -173,28 +160,6 @@ export default function CreatePostForm({
     }
   };
 
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.productId) {
-      newErrors.productId = "Debe seleccionar un producto";
-    }
-
-    if (!formData.title.trim()) {
-      newErrors.title = "El título es requerido";
-    }
-
-    if (!formData.content.trim()) {
-      newErrors.content = "La descripción es requerida";
-    }
-
-    if (formData.price <= 0) {
-      newErrors.price = "El precio debe ser mayor a 0";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   const handleSubmit = async () => {
     console.log(1);

@@ -6,7 +6,6 @@ import Swal from "sweetalert2";
 
 export interface UseReports {
   reports: Report[];
-  currentReport: Report | null;
   loading: boolean;
   createReport: (
     openReason: string,
@@ -30,10 +29,8 @@ export interface UseReports {
 export default function useReports(): UseReports {
   const {
     reports,
-    currentReport,
     loading,
     setReports,
-    setCurrentReport,
     addReport,
     updateReport: updateReportStore,
     removeReport,
@@ -43,8 +40,7 @@ export default function useReports(): UseReports {
 
   useEffect(() => {
     console.log("Reports:", reports);
-    console.log("Current Report:", currentReport);
-  }, [reports, currentReport]);
+  }, [reports]);
 
   // Report API functions
   const postReport = async (
@@ -208,7 +204,6 @@ export default function useReports(): UseReports {
 
   return {
     reports,
-    currentReport,
     loading,
     createReport,
     getReports,

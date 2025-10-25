@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { User as UserIcon, Edit, Star, Save, X } from "lucide-react";
 import { User as UserInterface, UserStatus } from "../../../interfaces/Users";

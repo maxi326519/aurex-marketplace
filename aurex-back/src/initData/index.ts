@@ -1,5 +1,5 @@
-import { conn, User } from "../db";
 import { UserRol, UserStatus } from "../interfaces/UserTS";
+import { conn, User } from "../db";
 import readline from "readline";
 
 const bcrypt = require("bcrypt");

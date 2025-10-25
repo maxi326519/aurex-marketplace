@@ -16,44 +16,11 @@ const Message: React.FC<MessageProps> = ({ message, isOwn }) => {
   };
 
   const renderContent = () => {
-    switch (message.type) {
-      case "text":
-        return (
-          <div className="whitespace-pre-wrap break-words">
-            {message.text}
-          </div>
-        );
-      case "image":
-        return (
-          <div className="relative">
-            <img
-              src={message.text}
-              alt="Imagen"
-              className="max-w-xs rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-              onClick={() => window.open(message.text, "_blank")}
-            />
-          </div>
-        );
-      case "video":
-        return (
-          <div className="relative">
-            <video
-              src={message.text}
-              controls
-              className="max-w-xs rounded-lg"
-              preload="metadata"
-            >
-              Tu navegador no soporta la reproducción de video.
-            </video>
-          </div>
-        );
-      default:
-        return (
-          <div className="whitespace-pre-wrap break-words">
-            {message.text}
-          </div>
-        );
-    }
+    return (
+      <div className="whitespace-pre-wrap break-words">
+        {message.text}
+      </div>
+    );
   };
 
   return (
@@ -73,7 +40,7 @@ const Message: React.FC<MessageProps> = ({ message, isOwn }) => {
             isOwn ? "text-blue-100" : "text-gray-500"
           }`}
         >
-          {formatTime(message.createdAt)}
+          {formatTime(message.date.toISOString())}
         </div>
       </div>
     </div>

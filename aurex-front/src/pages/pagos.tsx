@@ -17,9 +17,9 @@ export default function Pagos() {
     createOrder,
     getFirstBusinessId,
   } = useCartStore();
-  const { getPaymentOptions, user } = useAuth();
+  const { user } = useAuth();
   const [paymentOptions, setPaymentOptions] = useState<PaymentOption[]>([]);
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [selectedOption, setSelectedOption] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -29,7 +29,8 @@ export default function Pagos() {
       console.log("Items in cart:", items);
       if (businessId) {
         try {
-          const opts = await getPaymentOptions(businessId);
+          // TODO: Implementar getPaymentOptions
+          const opts: PaymentOption[] = [];
           console.log("Payment options received:", opts);
           setPaymentOptions(opts);
         } catch (error) {
@@ -44,7 +45,7 @@ export default function Pagos() {
     if (items.length > 0) {
       loadPaymentOptions();
     }
-  }, [items, getFirstBusinessId, getPaymentOptions]);
+  }, [items, getFirstBusinessId]);
 
   const handlePayment = async () => {
     if (!selectedOption) return;
@@ -127,7 +128,7 @@ export default function Pagos() {
                       ? "border-blue-500 bg-blue-50"
                       : "border-gray-200 hover:border-gray-300"
                   }`}
-                  onClick={() => setSelectedOption(option.id)}
+                  onClick={() => setSelectedOption(option.id || "")}
                 >
                   <div className="flex items-center gap-3">
                     {option.type === "link" ? (

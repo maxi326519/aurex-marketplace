@@ -1,7 +1,7 @@
 import { RefreshCw, Store } from "lucide-react";
 import { Reception } from "../../../../interfaces/Receptions";
 import { useEffect } from "react";
-import { User } from "../../vendedores/perfil";
+import { User } from "../../../../interfaces/Users.ts";
 import useReceptions from "../../../../hooks/Dashboard/receptions/useReceptions";
 import useUsers from "../../../../hooks/Dashboard/users/useUsers";
 
@@ -83,4 +83,3 @@ const tableColumns = (handleGetUser: (row: Reception) => User | undefined) => {
     },
   ];
 };
-

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Send, Paperclip, Image, Video } from "lucide-react";
 import Message from "./Message";
 import ChatHeader from "./ChatHeader";
-import { Chat as ChatType, Message as MessageType } from "../../../interfaces/Chat";
+import { Message as MessageType } from "../../../interfaces/Chat";
 import useChat from "../../../hooks/Dashboard/chat/useChat";
 
 interface ChatProps {
@@ -12,7 +12,6 @@ interface ChatProps {
 
 const Chat: React.FC<ChatProps> = ({ chatId, onBack }) => {
   const [newMessage, setNewMessage] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -45,7 +44,7 @@ const Chat: React.FC<ChatProps> = ({ chatId, onBack }) => {
     if (!newMessage.trim() || !currentChat) return;
 
     try {
-      await sendMessage(currentChat._id, newMessage.trim());
+      await sendMessage(currentChat.id, newMessage.trim());
       setNewMessage("");
     } catch (error) {
       console.error("Error al enviar mensaje:", error);
@@ -107,24 +106,13 @@ const Chat: React.FC<ChatProps> = ({ chatId, onBack }) => {
         ) : (
           messages.map((message: MessageType) => (
             <Message
-              key={message._id}
+              key={message.id}
               message={message}
               isOwn={message.type === "Cliente"}
             />
           ))
         )}
         
-        {isTyping && (
-          <div className="flex justify-start">
-            <div className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg rounded-bl-sm">
-              <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-100"></div>
-                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-200"></div>
-              </div>
-            </div>
-          </div>
-        )}
         
         <div ref={messagesEndRef} />
       </div>

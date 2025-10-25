@@ -29,6 +29,7 @@ export interface Post {
   };
   userId?: string;
   productId?: string;
+  businessId?: string;
 }
 
 export const initPost = (): Post => ({

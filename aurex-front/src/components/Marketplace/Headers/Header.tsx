@@ -43,9 +43,6 @@ const Header = ({ categories = true }: Props) => {
     navigate("/busqueda");
   }
 
-  function handleSetLocation() {
-    /* TODO: Consultar como manejarlo */
-  }
 
   return (
     <header className="text-white">

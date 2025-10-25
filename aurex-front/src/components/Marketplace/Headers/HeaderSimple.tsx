@@ -1,5 +1,5 @@
 import { ReactInput, Search } from "../../../interfaces/Types";
-import { LocationEdit, User } from "lucide-react";
+import { User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../../../hooks/Auth/useAuth";
@@ -25,9 +25,6 @@ const HeaderSimple = () => {
     navigate("/busqueda");
   }
 
-  function handleSetLocation() {
-    /* TODO: Consultar como manejarlo */
-  }
 
   return (
     <header className="text-white">

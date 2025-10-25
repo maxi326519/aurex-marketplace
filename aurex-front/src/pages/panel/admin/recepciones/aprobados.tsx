@@ -2,7 +2,7 @@ import { CheckCheck, Download, RefreshCw, Store } from "lucide-react";
 import { Product, ProductStatus } from "../../../../interfaces/Product";
 import { useEffect, useState } from "react";
 import { Reception } from "../../../../interfaces/Receptions";
-import { User } from "../../vendedores/perfil";
+import { User } from "../../../../interfaces/Users";
 import * as XLSX from "xlsx";
 import useReceptions from "../../../../hooks/Dashboard/receptions/useReceptions";
 import useProducts from "../../../../hooks/Dashboard/products/useProduct";

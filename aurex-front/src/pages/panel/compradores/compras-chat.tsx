@@ -1,35 +1,14 @@
-import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Chat from "../../../components/Dashboard/Chat/Chat";
-import useChat from "../../../hooks/Dashboard/chat/useChat";
 import { ArrowLeft } from "lucide-react";
+import Chat from "../../../components/Dashboard/Chat/Chat";
 
 const ComprasChat: React.FC = () => {
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
-  const { getChatByOrder, currentChat, loading } = useChat();
-
-  /*   useEffect(() => {
-    if (chatId) {
-      // Si tenemos un chatId, intentamos obtener el chat por orden
-      getChatByOrder(chatId);
-    }
-  }, []); */
 
   const handleBack = () => {
     navigate("/panel/compras");
   };
-
-  /*   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando chat...</p>
-        </div>
-      </div>
-    );
-  } */
 
   if (!chatId) {
     return (

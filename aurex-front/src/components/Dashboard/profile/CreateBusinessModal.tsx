@@ -219,7 +219,6 @@ export default function CreateBusinessModal({
                 value={formData.taxId}
                 onChange={handleInputChange}
                 disabled={loading}
-                placeholder="20-12345678-9"
                 error={errors.taxId}
               />
               <Input
@@ -228,7 +227,6 @@ export default function CreateBusinessModal({
                 value={formData.bankAccount}
                 onChange={handleInputChange}
                 disabled={loading}
-                placeholder="Número de cuenta bancaria"
                 error={errors.bankAccount}
               />
             </div>
@@ -246,7 +244,7 @@ export default function CreateBusinessModal({
             </Button>
             <Button
               type="primary"
-              onClick={handleSubmit}
+              onClick={() => handleSubmit({} as React.FormEvent)}
               loading={loading}
               className="flex-1"
             >

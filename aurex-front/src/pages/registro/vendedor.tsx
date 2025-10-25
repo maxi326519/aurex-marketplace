@@ -2,6 +2,7 @@ import { User, UserRol, UserStatus, initUser } from "../../interfaces/Users";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { Business, initBusiness } from "../../interfaces/Business";
 import { PaymentOption } from "../../interfaces/PaymentOption";
+import { useBusiness } from "../../hooks/Dashboard/useBusiness";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../../hooks/Auth/useAuth";
@@ -13,7 +14,8 @@ import Button from "../../components/ui/Button";
 
 export default function VendedorRegister() {
   const navigate = useNavigate();
-  const { completeVendedorRegistration, createPaymentOption, loading, user, business } = useAuth();
+  const { completeVendedorRegistration, loading, user, business } = useAuth();
+  const { createPaymentOption } = useBusiness();
 
   // Estados para el flujo de pasos
   const [currentStep, setCurrentStep] = useState(1);
@@ -113,12 +115,18 @@ export default function VendedorRegister() {
       }
     } else if (currentStep === 2) {
       // Validar paso 2: datos del negocio
-      if (!businessData.name || !businessData.type || !businessData.description) {
-        setError("Por favor completa el nombre, tipo y descripción del negocio");
+      if (
+        !businessData.name ||
+        !businessData.type ||
+        !businessData.description
+      ) {
+        setError(
+          "Por favor completa el nombre, tipo y descripción del negocio"
+        );
         return;
       }
     }
-    
+
     setError(""); // Limpiar errores si la validación pasa
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
@@ -141,7 +149,11 @@ export default function VendedorRegister() {
         return;
       }
 
-      if (!businessData.name || !businessData.type || !businessData.description) {
+      if (
+        !businessData.name ||
+        !businessData.type ||
+        !businessData.description
+      ) {
         setError("Por favor completa todos los campos del negocio");
         return;
       }
@@ -157,7 +169,7 @@ export default function VendedorRegister() {
 
       // Complete registration
       await completeVendedorRegistration(userData, businessData);
-      
+
       // Crear opciones de pago si existen
       if (paymentOptions.length > 0) {
         // Esperar un momento para que el negocio se actualice en el store
@@ -176,7 +188,7 @@ export default function VendedorRegister() {
           }
         }, 1000);
       }
-      
+
       navigate("/panel/vendedor/analiticas");
     } catch (error) {
       console.error("Error al completar registro:", error);
@@ -381,7 +393,7 @@ export default function VendedorRegister() {
                       <Button
                         type="secondary"
                         variant="outline"
-                        onClick={() => handleDeletePaymentOption(option.id)}
+                        onClick={() => handleDeletePaymentOption(option.id!)}
                         disabled={loading}
                       >
                         Eliminar

@@ -1,6 +1,7 @@
 import { persist } from "zustand/middleware";
 import { create } from "zustand";
-import { User, Business } from "../../interfaces/Users";
+import { User } from "../../interfaces/Users";
+import { Business } from "../../interfaces/Business";
 
 interface AuthState {
   user: User | null;

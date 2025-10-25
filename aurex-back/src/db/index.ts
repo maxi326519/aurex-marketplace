@@ -14,9 +14,6 @@ const options: any = {
   database: DB_NAME,
   logging: false,
   native: false,
-  dialectOptions: {
-    allowPublicKeyRetrieval: true,
-  },
 };
 
 const sequelize = new Sequelize(options);

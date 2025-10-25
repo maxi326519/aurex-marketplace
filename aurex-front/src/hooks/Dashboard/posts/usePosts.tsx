@@ -28,7 +28,7 @@ export default function usePosts(): UsePosts {
 
     // Append image files if any
     if (files && files.length > 0) {
-      files.forEach((file, index) => {
+      files.forEach((file) => {
         formData.append('images', file);
       });
     }

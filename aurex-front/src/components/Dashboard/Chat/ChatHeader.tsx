@@ -48,19 +48,11 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ chat, onBack }) => {
         <div className="flex items-center space-x-3">
           <div className="relative">
             <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-              {chat.seller?.profileImage ? (
-                <img
-                  src={chat.seller.profileImage}
-                  alt={chat.seller.name}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
-              ) : (
-                <User className="w-6 h-6 text-gray-600" />
-              )}
+              <User className="w-6 h-6 text-gray-600" />
             </div>
             <div
               className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${getStatusColor(
-                chat.status
+                chat.state
               )}`}
             />
           </div>
@@ -68,26 +60,26 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ chat, onBack }) => {
           <div>
             <div className="flex items-center space-x-2">
               <h3 className="font-semibold text-gray-900">
-                {chat.seller?.name || "Vendedor"}
+                Vendedor
               </h3>
               <span
                 className={`px-2 py-1 text-xs rounded-full text-white ${getStatusColor(
-                  chat.status
+                  chat.state
                 )}`}
               >
-                {getStatusText(chat.status)}
+                {getStatusText(chat.state)}
               </span>
             </div>
             <div className="flex items-center space-x-1 text-sm text-gray-500">
               <Store className="w-4 h-4" />
-              <span>{chat.seller?.businessName || "Negocio"}</span>
+              <span>Negocio</span>
             </div>
           </div>
         </div>
       </div>
       
       <div className="text-sm text-gray-500">
-        Pedido #{chat.orderId}
+        Chat #{chat.id}
       </div>
     </div>
   );

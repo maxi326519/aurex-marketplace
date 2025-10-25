@@ -11,8 +11,6 @@ import {
   MapPin,
   PackagePlus,
   Clock,
-  Truck,
-  CheckCircle2,
   History,
   PackageCheck,
 } from "lucide-react";

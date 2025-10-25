@@ -19,7 +19,6 @@ export default function Cart() {
     clear,
     getTotalItems,
     getTotalAmount,
-    createOrder,
   } = useCartStore();
 
   function handleApplyDiscount() {
