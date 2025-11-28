@@ -1,5 +1,5 @@
-import React, { useState } from "react";
 import Filters, { FilterConfig } from "../Filters/Filters";
+import React, { useState } from "react";
 
 import styles from "./Controls.module.css";
 import searchSvg from "../../../assets/svg/dashboard/search.svg";
@@ -72,7 +72,7 @@ export default function Controls({
       </div>
       {btnConfig && (
         <div className={styles.btnContainer}>
-          {btnConfig.map((btn, index) => (
+          {btnConfig.map((btn, index) =>
             btn.component ? (
               <React.Fragment key={index}>{btn.component}</React.Fragment>
             ) : (
@@ -86,7 +86,7 @@ export default function Controls({
                 {btn.label}
               </Button>
             )
-          ))}
+          )}
         </div>
       )}
     </div>

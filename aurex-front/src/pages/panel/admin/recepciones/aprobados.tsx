@@ -28,6 +28,13 @@ interface StockItemState extends StockItem {
   product?: Product | null;
 }
 
+interface ComparisonRow {
+  ean: string;
+  sku: string;
+  cantidadVendedor: number;
+  cantidadAdmin: number;
+}
+
 export default function MovementOrdersApproved() {
   const users = useUsers();
   const products = useProducts();
@@ -40,6 +47,8 @@ export default function MovementOrdersApproved() {
   const [stockState, setStockState] = useState<StockItemState[]>([]);
   const [validating, setValidating] = useState<boolean>(false);
   const [isCompleting, setIsCompleting] = useState<boolean>(false);
+  const [comparisonData, setComparisonData] = useState<ComparisonRow[]>([]);
+  const [showComparisonModal, setShowComparisonModal] = useState<boolean>(false);
 
   useEffect(() => {
     if (approved.data.length === 0) handleGetData();
@@ -69,6 +78,8 @@ export default function MovementOrdersApproved() {
     setHasDifferences(false);
     setStockData([]);
     setStockState([]);
+    setComparisonData([]);
+    setShowComparisonModal(false);
   };
 
   const handleCompare = async (file: File | null) => {
@@ -99,11 +110,13 @@ export default function MovementOrdersApproved() {
         const adminProducts: Product[] = groupProducts(adminRows);
 
         // 4) Comparar
-        const result = compareProducts(vendorProducts, adminProducts);
+        const { errors: comparisonErrors, comparisonRows } = compareProducts(vendorProducts, adminProducts);
 
         // 5) Mostrar resultado y determinar si hay diferencias
-        if (result.length > 0) {
-          setErrors(result);
+        if (comparisonErrors.length > 0) {
+          setErrors(comparisonErrors);
+          setComparisonData(comparisonRows);
+          setShowComparisonModal(true); // Mostrar modal de confirmación
           setHasDifferences(true); // Hay diferencias, será "Parcial"
         } else {
           setComparedApproved(true);
@@ -310,11 +323,15 @@ export default function MovementOrdersApproved() {
   /**
    * Agrupa productos por EAN y SKU, sumando cantidades
    * (Mantiene compatibilidad con el formato anterior del Excel del vendedor)
+   * Salta la primera fila porque es el encabezado
    */
   const groupProducts = (rows: any[]): Product[] => {
     const products: Product[] = [];
 
-    rows.forEach((row) => {
+    // Saltar la primera fila (header)
+    const dataRows = rows.slice(1);
+
+    dataRows.forEach((row) => {
       // Create product by row
       const product: Product = {
         ean: String(row["EAN"] || row[0] || 0),
@@ -356,8 +373,12 @@ export default function MovementOrdersApproved() {
 
   /**
    * Compara los productos del vendedor y del admin
+   * Retorna los errores y los datos de comparación para la tabla
    */
-  const compareProducts = (vendor: Product[], admin: Product[]): string[] => {
+  const compareProducts = (
+    vendor: Product[],
+    admin: Product[]
+  ): { errors: string[]; comparisonRows: ComparisonRow[] } => {
     console.log("=== INICIO COMPARACIÓN DE PRODUCTOS ===");
     console.log("📦 PRODUCTOS DEL VENDEDOR (total:", vendor.length, "):");
     console.log(JSON.stringify(vendor, null, 2));
@@ -453,11 +474,47 @@ export default function MovementOrdersApproved() {
     console.log(`  Errores:`, errors);
     console.log("=== FIN COMPARACIÓN DE PRODUCTOS ===\n");
 
+    // Crear array de comparación para la tabla
+    const comparisonRows: ComparisonRow[] = [];
+    
+    // Agregar todos los productos del vendedor
+    vendorMap.forEach((vendorProduct, key) => {
+      const adminProduct = adminMap.get(key);
+      comparisonRows.push({
+        ean: vendorProduct.ean,
+        sku: vendorProduct.sku,
+        cantidadVendedor: Number(vendorProduct.totalStock),
+        cantidadAdmin: adminProduct ? Number(adminProduct.totalStock) : 0,
+      });
+    });
+    
+    // Agregar productos del admin que no están en el vendedor
+    adminMap.forEach((adminProduct, key) => {
+      if (!vendorMap.has(key)) {
+        comparisonRows.push({
+          ean: adminProduct.ean,
+          sku: adminProduct.sku,
+          cantidadVendedor: 0,
+          cantidadAdmin: Number(adminProduct.totalStock),
+        });
+      }
+    });
+
     if (!errors.length) {
       setComparedApproved(true);
     }
 
-    return errors;
+    return { errors, comparisonRows };
+  };
+
+  const handleConfirmPartial = () => {
+    setShowComparisonModal(false);
+    setComparedApproved(true);
+    setHasDifferences(true);
+  };
+
+  const handleCancel = () => {
+    handleClose();
   };
 
   return (
@@ -495,7 +552,69 @@ export default function MovementOrdersApproved() {
             </div>
           </Modal>
         )}
-        {openModal && stockData.length > 0 && (
+        {openModal && showComparisonModal && comparisonData.length > 0 && (
+          <Modal title="Diferencias Detectadas" onClose={handleCancel}>
+            <div className="flex flex-col gap-4">
+              <p className="text-sm text-gray-600">
+                Se encontraron diferencias entre el Excel del vendedor y el del administrador.
+                Por favor, revisa la tabla y decide cómo proceder:
+              </p>
+              
+              <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                <table className="min-w-full border-collapse border border-gray-300">
+                  <thead className="sticky top-0 bg-gray-100">
+                    <tr>
+                      <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold">EAN</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold">SKU</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold">Cantidad (Vendedor)</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold">Cantidad (Admin)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {comparisonData.map((row, index) => {
+                      const hasDifference = row.cantidadVendedor !== row.cantidadAdmin;
+                      return (
+                        <tr
+                          key={index}
+                          className={hasDifference ? "bg-yellow-50" : ""}
+                        >
+                          <td className="border border-gray-300 px-4 py-2 text-sm">{row.ean}</td>
+                          <td className="border border-gray-300 px-4 py-2 text-sm">{row.sku}</td>
+                          <td className="border border-gray-300 px-4 py-2 text-sm text-center">
+                            {row.cantidadVendedor}
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2 text-sm text-center">
+                            {row.cantidadAdmin}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <Button
+                  type="secondary"
+                  onClick={handleCancel}
+                  variant="outline"
+                  className="px-4 py-2"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="primary"
+                  onClick={handleConfirmPartial}
+                  variant="solid"
+                  className="px-4 py-2"
+                >
+                  Continuar como Parcial
+                </Button>
+              </div>
+            </div>
+          </Modal>
+        )}
+        {openModal && stockData.length > 0 && !showComparisonModal && (
           <Modal title="Validar y Completar Orden" onClose={handleClose}>
             <div className="flex flex-col gap-4">
               {errors.length > 0 && (
