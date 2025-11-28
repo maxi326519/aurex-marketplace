@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useStorage } from "../../../../hooks/Dashboard/storage/useStorage";
+import { Plus, Eye } from "lucide-react";
 import { Storage } from "../../../../interfaces/Storage";
-import { Plus } from "lucide-react";
 import usePagination from "../../../../hooks/Dashboard/usePagination";
 
 import DashboardLayout from "../../../../components/Dashboard/AdminDashboard";
@@ -10,40 +11,29 @@ import Table from "../../../../components/Dashboard/Table/Table";
 import Pagination from "../../../../components/Dashboard/Table/Pagination/Pagination";
 import StorageForm from "../../../../components/Dashboard/Forms/StorageForm";
 
-const tableColumns = [
+const tableColumns = (handleViewStock: (storage: Storage) => void) => [
   { header: "Rag", key: "rag" },
   { header: "Frente", key: "site" },
   { header: "Posiciones Totales", key: "position" },
   { header: "Capacidad Actual", key: "currentCapacity" },
   { header: "Capacidad estimada", key: "estimatedCapacity" },
-  // { header: "Cantidad permitida", key: "allowedQuantity" },
-  /*   {
-    header: "Ocupación",
-    key: "",
-    render: (row: Storage) => {
-      const percentage = Math.min(
-        100,
-        Math.round((row.currentCapacity / row.estimatedCapacity) * 100)
-      );
-      return (
-        <div className="w-full bg-gray-200 h-4 rounded">
-          <div
-            className={`h-4 rounded ${
-              percentage > 80
-                ? "bg-red-500"
-                : percentage > 50
-                ? "bg-yellow-400"
-                : "bg-green-500"
-            }`}
-            style={{ width: `${percentage}%` }}
-          />
-        </div>
-      );
-    },
-  }, */
+  {
+    header: "Acciones",
+    key: "actions",
+    render: (row: Storage) => (
+      <button
+        title="Ver stock"
+        onClick={() => handleViewStock(row)}
+        className="p-2 rounded-full border border-blue-300 hover:bg-blue-100 transition"
+      >
+        <Eye className="h-4 w-4 text-blue-600" />
+      </button>
+    ),
+  },
 ];
 
 export default function LocationsPage() {
+  const navigate = useNavigate();
   const storages = useStorage();
   const pagination = usePagination(storages.data);
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -80,14 +70,11 @@ export default function LocationsPage() {
     }
   };
 
-  // const handleOpenEdit = (data: Storage) => {
-  //   setSelected(data);
-  //   setIsOpen(true);
-  // };
-
-  // const handleDelete = (data: Storage) => {
-  //   storages.remove(data.id!);
-  // };
+  const handleViewStock = (storage: Storage) => {
+    if (storage.id) {
+      navigate(`/panel/admin/almacen/inventario?storageId=${storage.id}`);
+    }
+  };
 
   return (
     <DashboardLayout title="Almacén / Ubicaciones">
@@ -117,7 +104,7 @@ export default function LocationsPage() {
         </div>
 
         {/* TABLE */}
-        <Table columns={tableColumns} data={pagination.rows} />
+        <Table columns={tableColumns(handleViewStock)} data={pagination.rows} />
         <Pagination page={pagination.page} setPage={pagination.setPage} />
       </div>
     </DashboardLayout>

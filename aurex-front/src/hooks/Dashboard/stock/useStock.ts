@@ -1,8 +1,8 @@
+import { PaginationInfo } from "../../../components/Dashboard/Table/Table";
 import { Stock, Product } from "../../../interfaces/Product";
 import useStockStore from "./useStockStore";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { PaginationInfo } from "../../../components/Dashboard/Table/Table";
 
 export interface ProductWithStock extends Product {
   Stocks?: Stock[];
@@ -22,8 +22,9 @@ export interface UseStock {
   };
   movements: any[];
   create: (stock: Stock) => Promise<void>;
-  get: () => Promise<void>;
-  getByProduct: (productId: string) => Promise<void>;
+  get: (includeProduct?: boolean) => Promise<void>;
+  getByProduct: (productId: string, includeProduct?: boolean) => Promise<void>;
+  getByStorage: (storageId: string) => Promise<void>;
   update: (stock: Stock) => Promise<void>;
   remove: (id: string) => Promise<void>;
   getProductsWithStock: (
@@ -69,13 +70,33 @@ export default function useStock(): UseStock {
     return response.data;
   };
 
-  const getStockAPI = async (): Promise<Stock[]> => {
-    const response = await axios.get("/stock");
+  const getStockAPI = async (includeProduct: boolean = false): Promise<Stock[]> => {
+    const params = new URLSearchParams();
+    if (includeProduct) {
+      params.append("includeProduct", "true");
+    }
+    const url = params.toString() ? `/stock?${params.toString()}` : "/stock";
+    const response = await axios.get(url);
     return response.data;
   };
 
-  const getStockByProduct = async (productId: string): Promise<Stock[]> => {
-    const response = await axios.get(`/stock/${productId}`);
+  const getStockByProduct = async (
+    productId: string,
+    includeProduct: boolean = false
+  ): Promise<Stock[]> => {
+    const params = new URLSearchParams();
+    if (includeProduct) {
+      params.append("includeProduct", "true");
+    }
+    const url = params.toString()
+      ? `/stock/product/${productId}?${params.toString()}`
+      : `/stock/product/${productId}`;
+    const response = await axios.get(url);
+    return response.data;
+  };
+
+  const getStockByStorage = async (storageId: string): Promise<Stock[]> => {
+    const response = await axios.get(`/stock/storage/${storageId}`);
     return response.data;
   };
 
@@ -109,12 +130,16 @@ export default function useStock(): UseStock {
     if (businessId) {
       params.append("businessId", businessId);
     }
-    const response = await axios.get(`/products/with-stock?${params.toString()}`);
+    const response = await axios.get(
+      `/products/with-stock?${params.toString()}`
+    );
     return response.data;
   };
 
   // API function for movements by product
-  const getMovementsByProductAPI = async (productId: string): Promise<any[]> => {
+  const getMovementsByProductAPI = async (
+    productId: string
+  ): Promise<any[]> => {
     const response = await axios.get(`/movements/product/${productId}`);
     return response.data;
   };
@@ -134,10 +159,10 @@ export default function useStock(): UseStock {
     }
   }
 
-  async function getStockData(): Promise<void> {
+  async function getStockData(includeProduct: boolean = false): Promise<void> {
     setLoading("get", true);
     try {
-      const stocks = await getStockAPI();
+      const stocks = await getStockAPI(includeProduct);
       setStocks(stocks);
     } catch (error: any) {
       console.error(error);
@@ -148,10 +173,27 @@ export default function useStock(): UseStock {
     }
   }
 
-  async function getStockByProductData(productId: string): Promise<void> {
+  async function getStockByProductData(
+    productId: string,
+    includeProduct: boolean = false
+  ): Promise<void> {
     setLoading("get", true);
     try {
-      const stocks = await getStockByProduct(productId);
+      const stocks = await getStockByProduct(productId, includeProduct);
+      setStocks(stocks);
+    } catch (error: any) {
+      console.error(error);
+      Swal.fire("Error", "Error to get the stocks, try later", "error");
+      throw error;
+    } finally {
+      setLoading("get", false);
+    }
+  }
+
+  async function getStockByStorageData(storageId: string): Promise<void> {
+    setLoading("get", true);
+    try {
+      const stocks = await getStockByStorage(storageId);
       setStocks(stocks);
     } catch (error: any) {
       console.error(error);
@@ -222,7 +264,11 @@ export default function useStock(): UseStock {
       setPagination(response.pagination);
     } catch (error: any) {
       console.error(error);
-      Swal.fire("Error", "Error to get products with stock, try later", "error");
+      Swal.fire(
+        "Error",
+        "Error to get products with stock, try later",
+        "error"
+      );
       throw error;
     } finally {
       setLoading("getProducts", false);
@@ -252,6 +298,7 @@ export default function useStock(): UseStock {
     create: createStockItem,
     get: getStockData,
     getByProduct: getStockByProductData,
+    getByStorage: getStockByStorageData,
     update: updateStockItem,
     remove: removeStockItem,
     getProductsWithStock: getProductsWithStockData,

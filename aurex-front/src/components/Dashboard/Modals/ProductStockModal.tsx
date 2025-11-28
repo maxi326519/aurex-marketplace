@@ -25,21 +25,22 @@ export default function ProductStockModal({ stocks, isOpen, onClose }: Props) {
             data={stocks}
             columns={[
               {
-                header: "Total",
-                key: "quantity",
-                render: (row: Stock) => <span>{row.amount}</span>,
-              },
-              {
-                header: "Publicado",
-                key: "enabled",
-                render: (row: Stock) => <span>{row.enabled}</span>,
+                header: "Unidades",
+                key: "amount",
+                render: (row: Stock) => (
+                  <span className="font-medium text-gray-900">
+                    {row.amount || 0}
+                  </span>
+                ),
               },
               {
                 header: "Ubicación",
                 key: "location",
                 render: (row: Stock) => (
-                  <span>
-                    {row.storage?.rag}/{row.storage?.site}
+                  <span className="text-gray-700">
+                    {row.storage?.rag && row.storage?.site
+                      ? `${row.storage.rag}/${row.storage.site}`
+                      : "-"}
                   </span>
                 ),
               },

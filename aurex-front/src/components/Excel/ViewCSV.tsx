@@ -131,7 +131,7 @@ export default function ImportProducts({
           name: String(row[2] || "").trim(), // Columna C: Producto
           totalStock: Number([row[3]]), // Columna D: Cantidad
           price: Number(row[4] || 0), // Columna E: Valor declarado
-          volumeType: String(row[5]) as Product["volumeType"], // umber(row[6]), // Columna F: Tipo de volumen
+          volumeType: 0,
           weight: 0, // No hay columna para peso
           status: ProductStatus.EMPTY, // Valor por defecto
         };

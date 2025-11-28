@@ -195,7 +195,6 @@ export default function SellersPage() {
       )}
       <div className="flex flex-col gap-2">
         <Controls
-          data={sellers.data}
           btnConfig={[
             {
               label: "Recargar",

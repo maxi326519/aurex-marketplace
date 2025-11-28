@@ -1,10 +1,9 @@
-import { Stock, Product } from "../../db";
+import { Stock, Product, Storage } from "../../db";
 import { MovementsType } from "../../interfaces/MovementTS";
 import { setMovements } from "../controllers/movements";
+import { Transaction } from "sequelize";
 import { ProductTS } from "../../interfaces/ProductTS";
 import { StockTS } from "../../interfaces/StockTS";
-import { Transaction } from "sequelize";
-import { Op } from "sequelize";
 
 const createStock = async (
   stock: StockTS,
@@ -12,10 +11,7 @@ const createStock = async (
   transaction?: Transaction
 ) => {
   // Create a new stock register
-  const newStock: any = await Stock.create(
-    { ...stock },
-    { transaction }
-  );
+  const newStock: any = await Stock.create({ ...stock }, { transaction });
 
   // Bind the new stock with the product
   const product = await Product.findByPk(stock.ProductId, { transaction });
@@ -52,14 +48,61 @@ const createStock = async (
   };
 };
 
-const getStock = () => {
-  const response = Stock.findAll();
+const getStock = async (includeProduct: boolean = false) => {
+  const options: any = {};
+  if (includeProduct) {
+    options.include = [
+      {
+        model: Product,
+        required: false,
+      },
+      {
+        model: Storage,
+        required: false,
+      },
+    ];
+  }
+  const response = await Stock.findAll(options);
   return response;
 };
 
-const getStockByProductId = async (productId: string) => {
-  const response = Stock.findAll({
+const getStockByProductId = async (
+  productId: string,
+  includeProduct: boolean = false
+) => {
+  const options: any = {
     where: { ProductId: productId },
+  };
+  if (includeProduct) {
+    options.include = [
+      {
+        model: Product,
+        required: false,
+      },
+      {
+        model: Storage,
+        required: false,
+      },
+    ];
+  }
+  const response = await Stock.findAll(options);
+  return response;
+};
+
+const getStockByStorageId = async (storageId: string) => {
+  const response = await Stock.findAll({
+    where: { StorageId: storageId },
+    include: [
+      {
+        model: Product,
+        required: false,
+      },
+      {
+        model: Storage,
+        required: false,
+      },
+    ],
+    order: [["amount", "DESC"]],
   });
   return response;
 };
@@ -72,8 +115,10 @@ const setIngress = async (
   transaction?: Transaction
 ) => {
   // Check parameters
-  if (!stockId && !stockModel) throw new Error("missing parameter: stockId or stockModel");
-  if (!quantity || quantity <= 0) throw new Error("missing or invalid parameter: quantity");
+  if (!stockId && !stockModel)
+    throw new Error("missing parameter: stockId or stockModel");
+  if (!quantity || quantity <= 0)
+    throw new Error("missing or invalid parameter: quantity");
 
   // Obtener el stock si no se proporcionó el modelo
   let stock: any = stockModel;
@@ -96,10 +141,14 @@ const setIngress = async (
   );
 
   // Obtener y actualizar el producto
-  const product: any = await Product.findByPk(stock.dataValues.ProductId, { transaction });
+  const product: any = await Product.findByPk(stock.dataValues.ProductId, {
+    transaction,
+  });
   if (!product) throw new Error("Product not found");
 
-  const currentTotalStock = Number((product.dataValues as ProductTS).totalStock);
+  const currentTotalStock = Number(
+    (product.dataValues as ProductTS).totalStock
+  );
   await product.update(
     {
       totalStock: currentTotalStock + Number(quantity),
@@ -135,8 +184,10 @@ const setEgress = async (
   transaction?: Transaction
 ) => {
   // Check parameters
-  if (!stockId && !stockModel) throw new Error("missing parameter: stockId or stockModel");
-  if (!quantity || quantity <= 0) throw new Error("missing or invalid parameter: quantity");
+  if (!stockId && !stockModel)
+    throw new Error("missing parameter: stockId or stockModel");
+  if (!quantity || quantity <= 0)
+    throw new Error("missing or invalid parameter: quantity");
 
   // Obtener el stock si no se proporcionó el modelo
   let stock: any = stockModel;
@@ -148,7 +199,9 @@ const setEgress = async (
   // Validar que hay suficiente stock disponible
   const availableStock = Number(stock.dataValues.enabled);
   if (availableStock < Number(quantity)) {
-    throw new Error(`Stock insuficiente. Disponible: ${availableStock}, Requerido: ${quantity}`);
+    throw new Error(
+      `Stock insuficiente. Disponible: ${availableStock}, Requerido: ${quantity}`
+    );
   }
 
   // Restar la cantidad del stock
@@ -165,12 +218,18 @@ const setEgress = async (
   );
 
   // Obtener y actualizar el producto
-  const product: any = await Product.findByPk(stock.dataValues.ProductId, { transaction });
+  const product: any = await Product.findByPk(stock.dataValues.ProductId, {
+    transaction,
+  });
   if (!product) throw new Error("Product not found");
 
-  const currentTotalStock = Number((product.dataValues as ProductTS).totalStock);
-  const currentReservedStock = Number((product.dataValues as any).reservedStock || 0);
-  
+  const currentTotalStock = Number(
+    (product.dataValues as ProductTS).totalStock
+  );
+  const currentReservedStock = Number(
+    (product.dataValues as any).reservedStock || 0
+  );
+
   // Restar del totalStock y también del reservedStock si estaba reservado
   const newTotalStock = currentTotalStock - Number(quantity);
   const newReservedStock = Math.max(0, currentReservedStock - Number(quantity));
@@ -299,7 +358,8 @@ const subtractStock = async (
 ) => {
   if (!productId) throw new Error("Missing parameter: productId");
   if (!storageId) throw new Error("Missing parameter: storageId");
-  if (!quantity || quantity <= 0) throw new Error("Missing or invalid parameter: quantity");
+  if (!quantity || quantity <= 0)
+    throw new Error("Missing or invalid parameter: quantity");
 
   // Buscar el stock existente para este producto y almacén
   const stock: any = await Stock.findOne({
@@ -317,7 +377,13 @@ const subtractStock = async (
   }
 
   // Usar setEgress con el modelo de stock encontrado
-  return await setEgress(stock.dataValues.id, stock, quantity, userId, transaction);
+  return await setEgress(
+    stock.dataValues.id,
+    stock,
+    quantity,
+    userId,
+    transaction
+  );
 };
 
 /**
@@ -332,7 +398,8 @@ const updateOrCreateStock = async (
 ) => {
   if (!stockData.ProductId) throw new Error("Missing parameter: ProductId");
   if (!stockData.StorageId) throw new Error("Missing parameter: StorageId");
-  if (!stockData.amount || stockData.amount <= 0) throw new Error("Missing or invalid parameter: amount");
+  if (!stockData.amount || stockData.amount <= 0)
+    throw new Error("Missing or invalid parameter: amount");
 
   // Buscar si ya existe stock para este producto y almacén
   const existingStock: any = await Stock.findOne({
@@ -345,7 +412,13 @@ const updateOrCreateStock = async (
 
   if (existingStock) {
     // Si existe, actualizar usando setIngress
-    return await setIngress(existingStock.dataValues.id, existingStock, stockData.amount, userId, transaction);
+    return await setIngress(
+      existingStock.dataValues.id,
+      existingStock,
+      stockData.amount,
+      userId,
+      transaction
+    );
   } else {
     // Si no existe, crear usando createStock
     return await createStock(stockData, userId, transaction);
@@ -356,6 +429,7 @@ export {
   createStock,
   getStock,
   getStockByProductId,
+  getStockByStorageId,
   setIngress,
   setEgress,
   setTransfer,

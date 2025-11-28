@@ -341,22 +341,6 @@ export default function VendedorRegister() {
                   required
                 />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  name="taxId"
-                  label="CUIT/CUIL"
-                  value={businessData.taxId}
-                  onChange={handleBusinessDataChange}
-                  disabled={loading}
-                />
-                <Input
-                  name="bankAccount"
-                  label="Cuenta bancaria"
-                  value={businessData.bankAccount}
-                  onChange={handleBusinessDataChange}
-                  disabled={loading}
-                />
-              </div>
             </div>
           </div>
         );

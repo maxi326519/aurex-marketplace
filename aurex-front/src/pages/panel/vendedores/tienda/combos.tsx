@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
-import { Plus, X, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
+import { Product } from "../../../../interfaces/Product";
+import useProducts from "../../../../hooks/Dashboard/products/useProduct";
+
 import DashboardLayout from "../../../../components/Dashboard/SellerDashboard";
 import Table from "../../../../components/Dashboard/Table/Table";
 import SearchSelect from "../../../../components/Dashboard/Inputs/SearchSelect";
 import Input from "../../../../components/Dashboard/Inputs/Input";
 import Button from "../../../../components/ui/Button";
-import useProducts from "../../../../hooks/Dashboard/products/useProduct";
-import { Product } from "../../../../interfaces/Product";
 
 interface ComboProduct {
   productId: string;
@@ -38,6 +39,7 @@ const getTableColumns = (
     render: (row: ComboProduct) => (
       <div className="w-24">
         <input
+          title="Cantidad"
           type="number"
           min="1"
           value={row.quantity}
@@ -62,15 +64,13 @@ const getTableColumns = (
     render: (row: ComboProduct) => (
       <div className="w-24">
         <input
+          title="Descuento %"
           type="number"
           min="0"
           max="100"
           value={row.discount || 0}
           onChange={(e) =>
-            handleDiscountChange(
-              row.productId,
-              parseFloat(e.target.value) || 0
-            )
+            handleDiscountChange(row.productId, parseFloat(e.target.value) || 0)
           }
           className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
         />
@@ -84,7 +84,11 @@ const getTableColumns = (
       const price = row.product.price || 0;
       const discount = row.discount || 0;
       const discountedPrice = price * (1 - discount / 100);
-      return <span className="font-semibold">${(discountedPrice * row.quantity).toFixed(2)}</span>;
+      return (
+        <span className="font-semibold">
+          ${(discountedPrice * row.quantity).toFixed(2)}
+        </span>
+      );
     },
   },
   {
@@ -107,7 +111,9 @@ export default function SellersProductsCombosPage() {
   const [comboName, setComboName] = useState<string>("");
   const [comboPrice, setComboPrice] = useState<number>(0);
   const [comboProducts, setComboProducts] = useState<ComboProduct[]>([]);
-  const [productList, setProductList] = useState<Array<{ key: string; value: string }>>([]);
+  const [productList, setProductList] = useState<
+    Array<{ key: string; value: string }>
+  >([]);
   const [currentProductSearch, setCurrentProductSearch] = useState<string>("");
 
   useEffect(() => {
@@ -118,12 +124,12 @@ export default function SellersProductsCombosPage() {
   // Actualizar lista de productos cuando cambian los datos, el término de búsqueda o los productos del combo
   useEffect(() => {
     // Filtrar productos que ya están en el combo
-    const comboProductIds = comboProducts.map(cp => cp.productId);
+    const comboProductIds = comboProducts.map((cp) => cp.productId);
     const filtered = products.data
       .filter((product) => {
         // Excluir productos que ya están en el combo
         if (comboProductIds.includes(product.id || "")) return false;
-        
+
         if (!currentProductSearch) return true;
         const term = currentProductSearch.toLowerCase();
         return (
@@ -152,9 +158,9 @@ export default function SellersProductsCombosPage() {
 
   const handleAddProduct = (item: { key: string; value: string }) => {
     if (!item.key) return;
-    
+
     const product = products.data.find((p) => p.id === item.key);
-    if (product && !comboProducts.find(cp => cp.productId === item.key)) {
+    if (product && !comboProducts.find((cp) => cp.productId === item.key)) {
       setComboProducts((prev) => [
         ...prev,
         {
@@ -176,7 +182,9 @@ export default function SellersProductsCombosPage() {
   const handleQuantityChange = (productId: string, quantity: number) => {
     setComboProducts((prev) =>
       prev.map((cp) =>
-        cp.productId === productId ? { ...cp, quantity: Math.max(1, quantity) } : cp
+        cp.productId === productId
+          ? { ...cp, quantity: Math.max(1, quantity) }
+          : cp
       )
     );
   };

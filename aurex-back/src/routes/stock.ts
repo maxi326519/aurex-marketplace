@@ -4,6 +4,7 @@ import {
   createStock,
   getStock,
   getStockByProductId,
+  getStockByStorageId,
   setEgress,
   setIngress,
   setTransfer,
@@ -21,9 +22,10 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
-router.get("/", async (_, res: Response) => {
+router.get("/", async (req: Request, res: Response) => {
   try {
-    const stock = await getStock();
+    const includeProduct = req.query.includeProduct === "true";
+    const stock = await getStock(includeProduct);
     res.status(200).json(stock);
   } catch (error: any) {
     console.log(error);
@@ -31,11 +33,24 @@ router.get("/", async (_, res: Response) => {
   }
 });
 
-router.get("/:productId", async (req: Request, res: Response) => {
+router.get("/product/:productId", async (req: Request, res: Response) => {
   try {
     const { productId } = req.params;
+    const includeProduct = req.query.includeProduct === "true";
 
-    const stock = await getStockByProductId(productId);
+    const stock = await getStockByProductId(productId, includeProduct);
+    res.status(200).json(stock);
+  } catch (error: any) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get("/storage/:storageId", async (req: Request, res: Response) => {
+  try {
+    const { storageId } = req.params;
+
+    const stock = await getStockByStorageId(storageId);
     res.status(200).json(stock);
   } catch (error: any) {
     console.log(error);
@@ -48,7 +63,12 @@ router.patch("/ingress", async (req: Request, res: Response) => {
     const { StockId, quantity, user } = req.body;
     console.log(StockId, quantity, user);
 
-    const updatedStock = await setIngress(StockId, quantity, user?.userId);
+    const updatedStock = await setIngress(
+      StockId,
+      null,
+      quantity,
+      user?.userId
+    );
     res.status(200).json(updatedStock);
   } catch (error: any) {
     console.log(error);
@@ -59,7 +79,7 @@ router.patch("/ingress", async (req: Request, res: Response) => {
 router.patch("/egress", async (req: Request, res: Response) => {
   try {
     const { StockId, quantity, user } = req.body;
-    const updatedStock = await setEgress(StockId, quantity, user?.userId);
+    const updatedStock = await setEgress(StockId, null, quantity, user?.userId);
     res.status(200).json(updatedStock);
   } catch (error: any) {
     res.status(404).json({ error: error.message });
