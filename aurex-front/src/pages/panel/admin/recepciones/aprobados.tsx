@@ -204,37 +204,76 @@ export default function MovementOrdersApproved() {
     setErrors([]);
 
     try {
-      // Validar productos en el backend usando el BusinessId de la orden
-      const validationResults = await products.api.validateProducts(
-        stockData.map((item) => ({ ean: item.ean, sku: item.sku })),
-        openModal.BusinessId
-      );
+      // Si es SALIDA, validar stock disponible en los almacenes especificados
+      // Si es ENTRADA, solo validar que los productos existan
+      if (openModal.type === "SALIDA") {
+        const validationResults = await products.api.validateStockByStorage(
+          stockData.map((item) => ({
+            ean: item.ean,
+            sku: item.sku,
+            cantidad: item.cantidad,
+            almacen: item.almacen,
+          })),
+          openModal.BusinessId
+        );
 
-      // Actualizar el estado con los resultados de validación
-      const updatedState: StockItemState[] = stockData.map((item, index) => {
-        const validation = validationResults[index];
-        return {
-          ...item,
-          state: validation.exists ? "valid" : "invalid",
-          message: validation.exists
-            ? "Producto encontrado"
-            : "Producto no encontrado en la base de datos",
-          product: validation.product,
-        };
-      });
+        // Actualizar el estado con los resultados de validación
+        const updatedState: StockItemState[] = stockData.map((item, index) => {
+          const validation = validationResults[index];
+          return {
+            ...item,
+            state: validation.exists && validation.hasStock ? "valid" : "invalid",
+            message: validation.error || (validation.hasStock ? `Stock disponible: ${validation.availableStock}` : "Stock insuficiente"),
+            product: validation.product,
+          };
+        });
 
-      setStockState(updatedState);
+        setStockState(updatedState);
 
-      // Verificar si hay productos inválidos
-      const invalidCount = updatedState.filter(
-        (item) => item.state === "invalid"
-      ).length;
-      if (invalidCount > 0) {
-        setErrors([
-          `${invalidCount} producto(s) no encontrado(s). Puedes continuar de todas formas si deseas crear el stock solo para los productos válidos.`,
-        ]);
+        // Verificar si hay productos inválidos o sin stock
+        const invalidCount = updatedState.filter(
+          (item) => item.state === "invalid"
+        ).length;
+        if (invalidCount > 0) {
+          setErrors([
+            `${invalidCount} producto(s) con problemas de stock. Revisa la tabla para más detalles.`,
+          ]);
+        } else {
+          setErrors([]);
+        }
       } else {
-        setErrors([]);
+        // Para ENTRADA, solo validar que los productos existan
+        const validationResults = await products.api.validateProducts(
+          stockData.map((item) => ({ ean: item.ean, sku: item.sku })),
+          openModal.BusinessId
+        );
+
+        // Actualizar el estado con los resultados de validación
+        const updatedState: StockItemState[] = stockData.map((item, index) => {
+          const validation = validationResults[index];
+          return {
+            ...item,
+            state: validation.exists ? "valid" : "invalid",
+            message: validation.exists
+              ? "Producto encontrado"
+              : "Producto no encontrado en la base de datos",
+            product: validation.product,
+          };
+        });
+
+        setStockState(updatedState);
+
+        // Verificar si hay productos inválidos
+        const invalidCount = updatedState.filter(
+          (item) => item.state === "invalid"
+        ).length;
+        if (invalidCount > 0) {
+          setErrors([
+            `${invalidCount} producto(s) no encontrado(s). Puedes continuar de todas formas si deseas crear el stock solo para los productos válidos.`,
+          ]);
+        } else {
+          setErrors([]);
+        }
       }
     } catch (error) {
       setErrors([
@@ -373,7 +412,7 @@ export default function MovementOrdersApproved() {
 
   /**
    * Compara los productos del vendedor y del admin
-   * Retorna los errores y los datos de comparación para la tabla
+sta s   * Retorna los errores y los datos de comparación para la tabla
    */
   const compareProducts = (
     vendor: Product[],

@@ -1,7 +1,7 @@
 import { MovementOrder, Business, Product, Storage } from "../../db";
+import { updateOrCreateStock, subtractStock } from "./stock";
 import { MovementOrderTS } from "../../interfaces/MovementOrdersTS";
 import { WhereOptions, Op } from "sequelize";
-import { createStock } from "./stock";
 import { StockTS } from "../../interfaces/StockTS";
 import path from "path";
 import fs from "fs";
@@ -87,7 +87,10 @@ const getAllMovementOrders = async (state?: string) => {
   const where: WhereOptions<any> = {};
   if (state) {
     // Si el estado contiene comas, significa que son múltiples estados
-    const states = state.split(",").map(s => s.trim()).filter(s => s.length > 0);
+    const states = state
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
     if (states.length > 1) {
       // Usar Op.in para múltiples estados
       where.state = { [Op.in]: states };
@@ -304,16 +307,33 @@ const completeMovementOrder = async (
         );
       }
 
-      // Crear el stock dentro de la transacción
-      const stockData: StockTS = {
-        amount: Number(item.cantidad),
-        enabled: Number(item.cantidad),
-        isFull: false,
-        ProductId: product.dataValues.id,
-        StorageId: storage.dataValues.id,
-      };
+      // Si es ENTRADA, actualizar o crear stock. Si es SALIDA, restar stock
+      if (movementOrder.dataValues.type === "ENTRADA") {
+        // Buscar stock existente para validar antes de actualizar o crear
+        const stockData: StockTS = {
+          amount: Number(item.cantidad),
+          enabled: Number(item.cantidad),
+          isFull: false,
+          ProductId: product.dataValues.id,
+          StorageId: storage.dataValues.id,
+        };
 
-      await createStock(stockData, userId, transaction);
+        await updateOrCreateStock(stockData, userId, transaction);
+      } else if (movementOrder.dataValues.type === "SALIDA") {
+        // Restar stock del almacén especificado
+        await subtractStock(
+          product.dataValues.id,
+          storage.dataValues.id,
+          Number(item.cantidad),
+          userId,
+          transaction
+        );
+      } else {
+        throw new Error(
+          `Tipo de orden de movimiento no válido: ${movementOrder.dataValues.type}`
+        );
+      }
+
       successCount++;
     }
 

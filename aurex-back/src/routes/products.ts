@@ -8,6 +8,9 @@ import {
   disableProduct,
   getProductsWithStock,
   validateProducts,
+  validateStockOnly,
+  validateAndReserveStock,
+  validateStockByStorage,
 } from "./controllers/products";
 
 const router = Router();
@@ -126,6 +129,72 @@ router.post("/validate", async (req: Request, res: Response) => {
     }
 
     const validationResults = await validateProducts(products, userId, businessId);
+    res.status(200).json(validationResults);
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post("/validate-stock", async (req: Request, res: Response) => {
+  try {
+    const { products, businessId } = req.body;
+
+    if (!products || !Array.isArray(products)) {
+      return res.status(400).json({ error: "Products array is required" });
+    }
+
+    if (!businessId) {
+      return res.status(400).json({
+        error: "businessId is required.",
+      });
+    }
+
+    const validationResults = await validateAndReserveStock(products, businessId);
+    res.status(200).json(validationResults);
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post("/validate-stock-only", async (req: Request, res: Response) => {
+  try {
+    const { products, businessId } = req.body;
+
+    if (!products || !Array.isArray(products)) {
+      return res.status(400).json({ error: "Products array is required" });
+    }
+
+    if (!businessId) {
+      return res.status(400).json({
+        error: "businessId is required.",
+      });
+    }
+
+    const validationResults = await validateStockOnly(products, businessId);
+    res.status(200).json(validationResults);
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post("/validate-stock-by-storage", async (req: Request, res: Response) => {
+  try {
+    const { items, businessId } = req.body;
+
+    if (!items || !Array.isArray(items)) {
+      return res.status(400).json({ error: "Items array is required" });
+    }
+
+    if (!businessId) {
+      return res.status(400).json({
+        error: "businessId is required.",
+      });
+    }
+
+    const validationResults = await validateStockByStorage(items, businessId);
     res.status(200).json(validationResults);
   } catch (error: any) {
     console.error(error);

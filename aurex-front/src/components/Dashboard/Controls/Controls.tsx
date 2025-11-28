@@ -1,8 +1,6 @@
 import Filters, { FilterConfig } from "../Filters/Filters";
 import React, { useState } from "react";
 
-import styles from "./Controls.module.css";
-import searchSvg from "../../../assets/svg/dashboard/search.svg";
 import Button from "../../ui/Button";
 
 export type BtnConfig = Array<{
@@ -47,19 +45,15 @@ export default function Controls({
   }
 
   return (
-    <div className={styles.controls}>
-      <div className={styles.leftControls}>
-        <div className={styles.searchBar}>
-          <input
-            name="search"
-            placeholder="Escribe para buscar..."
-            value={search}
-            onChange={handleSearch}
-          />
-          <button title="Buscar" type="button">
-            <img src={searchSvg} alt="" />
-          </button>
-        </div>
+    <div className="flex justify-between gap-2.5">
+      <div className="flex gap-2.5">
+        <input
+          name="search"
+          placeholder="Escribe para buscar..."
+          value={search}
+          onChange={handleSearch}
+          className="px-3 py-1.5 text-sm rounded-md border border-gray-300 text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+        />
         {filtersData && filtersConfig && onFilter && (
           <Filters
             config={filtersConfig}
@@ -71,7 +65,7 @@ export default function Controls({
         )}
       </div>
       {btnConfig && (
-        <div className={styles.btnContainer}>
+        <div className="flex gap-2 items-center">
           {btnConfig.map((btn, index) =>
             btn.component ? (
               <React.Fragment key={index}>{btn.component}</React.Fragment>
@@ -79,7 +73,7 @@ export default function Controls({
               <Button
                 key={index}
                 type="primary"
-                className="btn-primary"
+                className="btn-primary text-sm py-1.5 px-3"
                 onClick={btn.onClick}
               >
                 {btn.leftIcon}

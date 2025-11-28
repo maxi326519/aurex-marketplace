@@ -56,7 +56,7 @@ const getMovements = async () => {
 
   // Get movements
   const movements = Movements.findAll();
-  
+
   // Return all Movements
   return movements;
 };
@@ -82,6 +82,10 @@ const getMovementsByProductId = async (productId: string) => {
         model: Storage,
         required: false,
       },
+      {
+        model: Business,
+        required: false,
+      },
     ],
     order: [["date", "DESC"]], // Más recientes primero
   });
@@ -89,4 +93,107 @@ const getMovementsByProductId = async (productId: string) => {
   return movements;
 };
 
-export { setMovements, getMovements, getMovementsByProductId };
+const getMovementsByBusiness = async (businessId: string) => {
+  if (!businessId) {
+    throw new Error("Business ID is required");
+  }
+
+  // Get movements for a specific business
+  const movements = await Movements.findAll({
+    where: { BusinessId: businessId },
+    include: [
+      {
+        model: Stock,
+        required: false,
+      },
+      {
+        model: Product,
+        required: false,
+      },
+      {
+        model: Storage,
+        required: false,
+      },
+      {
+        model: Business,
+        required: false,
+      },
+    ],
+    order: [["date", "DESC"]], // Más recientes primero
+  });
+
+  return movements;
+};
+
+const getMovementsByStorage = async (storageId: string) => {
+  if (!storageId) {
+    throw new Error("Storage ID is required");
+  }
+
+  // Get movements for a specific storage
+  const movements = await Movements.findAll({
+    where: { StorageId: storageId },
+    include: [
+      {
+        model: Stock,
+        required: false,
+      },
+      {
+        model: Product,
+        required: false,
+      },
+      {
+        model: Storage,
+        required: false,
+      },
+      {
+        model: Business,
+        required: false,
+      },
+    ],
+    order: [["date", "DESC"]], // Más recientes primero
+  });
+
+  return movements;
+};
+
+const getMovementsByStock = async (stockId: string) => {
+  if (!stockId) {
+    throw new Error("Stock ID is required");
+  }
+
+  // Get movements for a specific stock
+  const movements = await Movements.findAll({
+    where: { StockId: stockId },
+    include: [
+      {
+        model: Stock,
+        required: false,
+      },
+      {
+        model: Product,
+        required: false,
+      },
+      {
+        model: Storage,
+        required: false,
+      },
+      {
+        model: Business,
+        required: false,
+      },
+    ],
+    order: [["date", "DESC"]], // Más recientes primero
+  });
+
+  return movements;
+};
+
+export {
+  setMovements,
+  getMovements,
+  getMovementsByProductId,
+  getMovementsByBusiness,
+  getMovementsByStorage,
+  getMovementsByStock,
+};

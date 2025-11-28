@@ -4,6 +4,7 @@ import { setMovements } from "../controllers/movements";
 import { ProductTS } from "../../interfaces/ProductTS";
 import { StockTS } from "../../interfaces/StockTS";
 import { Transaction } from "sequelize";
+import { Op } from "sequelize";
 
 const createStock = async (
   stock: StockTS,
@@ -34,7 +35,7 @@ const createStock = async (
   // Create the movement
   const newMovement = await setMovements(
     new Date(),
-    MovementsType.entrada,
+    MovementsType.ingreso,
     stock.amount,
     newStock.dataValues.id,
     stock.StorageId || "",
@@ -42,14 +43,6 @@ const createStock = async (
     userId,
     transaction
   );
-
-  /* 
-  if (StorageId) {
-    // Bind the new stock with the storage
-    const storage = await Storage.findByPk(StorageId);
-    if (!storage) throw new Error("Storage not found");
-    await newStock.setStorage(storage);
-  } */
 
   // Return the new Stock and Movement
   return {
@@ -72,37 +65,58 @@ const getStockByProductId = async (productId: string) => {
 };
 
 const setIngress = async (
-  StockId: string,
+  stockId: string,
+  stockModel: any,
   quantity: number,
-  userId: string
+  userId: string,
+  transaction?: Transaction
 ) => {
   // Check parameters
-  if (!StockId) throw new Error("missing parameter: StockId");
-  if (!quantity) throw new Error("missing parameter: quantity");
+  if (!stockId && !stockModel) throw new Error("missing parameter: stockId or stockModel");
+  if (!quantity || quantity <= 0) throw new Error("missing or invalid parameter: quantity");
 
-  // Get the tock, add the amount and save
-  const stock: any = await Stock.findByPk(StockId);
-  if (!stock) throw new Error(`Stock not found`);
-  stock.quantity = Number(stock.quantity) + Number(quantity);
-  await stock.save();
+  // Obtener el stock si no se proporcionó el modelo
+  let stock: any = stockModel;
+  if (!stock) {
+    stock = await Stock.findByPk(stockId, { transaction });
+    if (!stock) throw new Error(`Stock not found`);
+  }
 
-  // Get and update product amount
-  const product: any = await Product.findOne({
-    where: { id: stock.dataValues.ProductId },
-  });
+  // Actualizar el stock sumando la cantidad
+  const newAmount = Number(stock.dataValues.amount) + Number(quantity);
+  const newEnabled = Number(stock.dataValues.enabled) + Number(quantity);
+
+  await stock.update(
+    {
+      amount: newAmount,
+      enabled: newEnabled,
+      isFull: newEnabled > 0,
+    },
+    { transaction }
+  );
+
+  // Obtener y actualizar el producto
+  const product: any = await Product.findByPk(stock.dataValues.ProductId, { transaction });
   if (!product) throw new Error("Product not found");
-  product.amount = Number(product.amount) + Number(quantity);
-  await product.save();
 
-  // Create the movement
+  const currentTotalStock = Number((product.dataValues as ProductTS).totalStock);
+  await product.update(
+    {
+      totalStock: currentTotalStock + Number(quantity),
+    },
+    { transaction }
+  );
+
+  // Crear el movimiento
   const movement = await setMovements(
     new Date(),
-    MovementsType.entrada,
+    MovementsType.ingreso,
     quantity,
     stock.dataValues.id,
     stock.dataValues.StorageId,
     stock.dataValues.ProductId,
-    userId
+    undefined, // BusinessId (opcional)
+    transaction
   );
 
   // Return the updated stock and the new movement
@@ -113,35 +127,72 @@ const setIngress = async (
   };
 };
 
-const setEgress = async (StockId: string, quantity: number, userId: string) => {
+const setEgress = async (
+  stockId: string,
+  stockModel: any,
+  quantity: number,
+  userId: string,
+  transaction?: Transaction
+) => {
   // Check parameters
-  if (!StockId) throw new Error("missing parameter: StockId");
-  if (!quantity) throw new Error("missing parameter: quantity");
+  if (!stockId && !stockModel) throw new Error("missing parameter: stockId or stockModel");
+  if (!quantity || quantity <= 0) throw new Error("missing or invalid parameter: quantity");
 
-  // Get the tock, check quantity and subtract the amount
-  const stock: any = await Stock.findByPk(StockId);
-  if (!stock) throw new Error(`Stock not found`);
-  if (stock.quantity < Number(quantity)) throw new Error("Insufficient Stock");
-  stock.quantity = Number(stock.quantity) - Number(quantity);
-  await stock.save();
+  // Obtener el stock si no se proporcionó el modelo
+  let stock: any = stockModel;
+  if (!stock) {
+    stock = await Stock.findByPk(stockId, { transaction });
+    if (!stock) throw new Error(`Stock not found`);
+  }
 
-  // Get and update product amount
-  const product: any = await Product.findOne({
-    where: { id: stock.dataValues.ProductId },
-  });
+  // Validar que hay suficiente stock disponible
+  const availableStock = Number(stock.dataValues.enabled);
+  if (availableStock < Number(quantity)) {
+    throw new Error(`Stock insuficiente. Disponible: ${availableStock}, Requerido: ${quantity}`);
+  }
+
+  // Restar la cantidad del stock
+  const newAmount = Number(stock.dataValues.amount) - Number(quantity);
+  const newEnabled = Number(stock.dataValues.enabled) - Number(quantity);
+
+  await stock.update(
+    {
+      amount: newAmount,
+      enabled: newEnabled,
+      isFull: newEnabled > 0,
+    },
+    { transaction }
+  );
+
+  // Obtener y actualizar el producto
+  const product: any = await Product.findByPk(stock.dataValues.ProductId, { transaction });
   if (!product) throw new Error("Product not found");
-  product.amount = Number(product.amount) - Number(quantity);
-  await product.save();
 
-  // Create the ingress movement
+  const currentTotalStock = Number((product.dataValues as ProductTS).totalStock);
+  const currentReservedStock = Number((product.dataValues as any).reservedStock || 0);
+  
+  // Restar del totalStock y también del reservedStock si estaba reservado
+  const newTotalStock = currentTotalStock - Number(quantity);
+  const newReservedStock = Math.max(0, currentReservedStock - Number(quantity));
+
+  await product.update(
+    {
+      totalStock: newTotalStock,
+      reservedStock: newReservedStock,
+    },
+    { transaction }
+  );
+
+  // Crear el movimiento de salida
   const movement = await setMovements(
     new Date(),
-    MovementsType.salida,
+    MovementsType.egreso,
     quantity,
     stock.dataValues.id,
     stock.dataValues.StorageId,
     stock.dataValues.ProductId,
-    userId
+    undefined, // BusinessId (opcional)
+    transaction
   );
 
   // Return the updated stock and the new movement
@@ -207,7 +258,7 @@ const setTransfer = async (
   // Create the egress movement
   const egressMovement = await setMovements(
     new Date(date),
-    MovementsType.salida,
+    MovementsType.transferencia,
     Number(quantity),
     egressStock.id,
     StorageId.egress,
@@ -218,7 +269,7 @@ const setTransfer = async (
   // Create the ingress movement
   const ingressMovement = await setMovements(
     new Date(date),
-    MovementsType.entrada,
+    MovementsType.transferencia,
     Number(quantity),
     ingressStock.id,
     StorageId.ingress,
@@ -239,6 +290,68 @@ const setTransfer = async (
   };
 };
 
+const subtractStock = async (
+  productId: string,
+  storageId: string,
+  quantity: number,
+  userId: string,
+  transaction?: Transaction
+) => {
+  if (!productId) throw new Error("Missing parameter: productId");
+  if (!storageId) throw new Error("Missing parameter: storageId");
+  if (!quantity || quantity <= 0) throw new Error("Missing or invalid parameter: quantity");
+
+  // Buscar el stock existente para este producto y almacén
+  const stock: any = await Stock.findOne({
+    where: {
+      ProductId: productId,
+      StorageId: storageId,
+    },
+    transaction,
+  });
+
+  if (!stock) {
+    throw new Error(
+      `Stock no encontrado para el producto y almacén especificados`
+    );
+  }
+
+  // Usar setEgress con el modelo de stock encontrado
+  return await setEgress(stock.dataValues.id, stock, quantity, userId, transaction);
+};
+
+/**
+ * Actualiza o crea stock para un producto en un almacén específico
+ * Si el stock existe, lo actualiza usando setIngress
+ * Si no existe, lo crea usando createStock
+ */
+const updateOrCreateStock = async (
+  stockData: StockTS,
+  userId: string,
+  transaction?: Transaction
+) => {
+  if (!stockData.ProductId) throw new Error("Missing parameter: ProductId");
+  if (!stockData.StorageId) throw new Error("Missing parameter: StorageId");
+  if (!stockData.amount || stockData.amount <= 0) throw new Error("Missing or invalid parameter: amount");
+
+  // Buscar si ya existe stock para este producto y almacén
+  const existingStock: any = await Stock.findOne({
+    where: {
+      ProductId: stockData.ProductId,
+      StorageId: stockData.StorageId,
+    },
+    transaction,
+  });
+
+  if (existingStock) {
+    // Si existe, actualizar usando setIngress
+    return await setIngress(existingStock.dataValues.id, existingStock, stockData.amount, userId, transaction);
+  } else {
+    // Si no existe, crear usando createStock
+    return await createStock(stockData, userId, transaction);
+  }
+};
+
 export {
   createStock,
   getStock,
@@ -246,4 +359,6 @@ export {
   setIngress,
   setEgress,
   setTransfer,
+  subtractStock,
+  updateOrCreateStock,
 };

@@ -20,7 +20,12 @@ export interface UseProducts {
     status: string;
   };
   create: (product: Product) => Promise<Product>;
-  get: (page?: number, limit?: number, searchTerm?: string, status?: string) => Promise<void>;
+  get: (
+    page?: number,
+    limit?: number,
+    searchTerm?: string,
+    status?: string
+  ) => Promise<void>;
   update: (product: Product) => Promise<void>;
   remove: (productId: string) => Promise<void>;
   searchProducts: (searchTerm: string) => void;
@@ -29,10 +34,46 @@ export interface UseProducts {
   onFilterReset: () => void;
   api: {
     postProduct: (product: Product) => Promise<Product>;
-    getProducts: (page?: number, limit?: number, searchTerm?: string, status?: string) => Promise<{ data: Product[]; pagination: PaginationInfo }>;
+    getProducts: (
+      page?: number,
+      limit?: number,
+      searchTerm?: string,
+      status?: string
+    ) => Promise<{ data: Product[]; pagination: PaginationInfo }>;
     updateProduct: (product: Product) => Promise<Product>;
     deleteProduct: (productId: string) => Promise<void>;
-    validateProducts: (products: Array<{ ean: string; sku: string }>, businessId?: string) => Promise<Array<{ ean: string; sku: string; exists: boolean; product: Product | null }>>;
+    validateProducts: (
+      products: Array<{ ean: string; sku: string }>,
+      businessId?: string
+    ) => Promise<
+      Array<{
+        ean: string;
+        sku: string;
+        exists: boolean;
+        product: Product | null;
+      }>
+    >;
+    validateStockOnly: (
+      products: Array<{ ean: string; sku: string; cantidad: number }>,
+      businessId: string
+    ) => Promise<any[]>;
+    validateAndReserveStock: (
+      products: Array<{ ean: string; sku: string; cantidad: number }>,
+      businessId: string
+    ) => Promise<any[]>;
+    validateStockByStorage: (
+      items: Array<{
+        ean: string;
+        sku: string;
+        cantidad: number;
+        almacen: string;
+      }>,
+      businessId: string
+    ) => Promise<any[]>;
+    getMovementsByProduct: (productId: string) => Promise<any[]>;
+    getMovementsByBusiness: (businessId: string) => Promise<any[]>;
+    getMovementsByStorage: (storageId: string) => Promise<any[]>;
+    getMovementsByStock: (stockId: string) => Promise<any[]>;
   };
   categories: {
     data: Category[];
@@ -107,8 +148,82 @@ export default function useProducts(): UseProducts {
   const validateProductsAPI = async (
     products: Array<{ ean: string; sku: string }>,
     businessId?: string
-  ): Promise<Array<{ ean: string; sku: string; exists: boolean; product: Product | null }>> => {
-    const response = await axios.post("/products/validate", { products, businessId });
+  ): Promise<
+    Array<{
+      ean: string;
+      sku: string;
+      exists: boolean;
+      product: Product | null;
+    }>
+  > => {
+    const response = await axios.post("/products/validate", {
+      products,
+      businessId,
+    });
+    return response.data;
+  };
+
+  const validateStockOnlyAPI = async (
+    products: Array<{ ean: string; sku: string; cantidad: number }>,
+    businessId: string
+  ): Promise<any[]> => {
+    const response = await axios.post("/products/validate-stock-only", {
+      products,
+      businessId,
+    });
+    return response.data;
+  };
+
+  const validateAndReserveStockAPI = async (
+    products: Array<{ ean: string; sku: string; cantidad: number }>,
+    businessId: string
+  ): Promise<any[]> => {
+    const response = await axios.post("/products/validate-stock", {
+      products,
+      businessId,
+    });
+    return response.data;
+  };
+
+  const validateStockByStorageAPI = async (
+    items: Array<{
+      ean: string;
+      sku: string;
+      cantidad: number;
+      almacen: string;
+    }>,
+    businessId: string
+  ): Promise<any[]> => {
+    const response = await axios.post("/products/validate-stock-by-storage", {
+      items,
+      businessId,
+    });
+    return response.data;
+  };
+
+  const getMovementsByProductAPI = async (
+    productId: string
+  ): Promise<any[]> => {
+    const response = await axios.get(`/movements/product/${productId}`);
+    return response.data;
+  };
+
+  const getMovementsByBusinessAPI = async (
+    businessId: string
+  ): Promise<any[]> => {
+    const response = await axios.get(`/movements/business/${businessId}`);
+    return response.data;
+  };
+
+  const getMovementsByStorageAPI = async (
+    storageId: string
+  ): Promise<any[]> => {
+    const response = await axios.get(`/movements/storage/${storageId}`);
+    return response.data;
+  };
+
+  const getMovementsByStockAPI = async (stockId: string): Promise<any[]> => {
+    const response = await axios.get(`/movements/stock/${stockId}`);
     return response.data;
   };
 
@@ -298,6 +413,13 @@ export default function useProducts(): UseProducts {
       updateProduct: updateProductAPI,
       deleteProduct: deleteProductAPI,
       validateProducts: validateProductsAPI,
+      validateStockOnly: validateStockOnlyAPI,
+      validateAndReserveStock: validateAndReserveStockAPI,
+      validateStockByStorage: validateStockByStorageAPI,
+      getMovementsByProduct: getMovementsByProductAPI,
+      getMovementsByBusiness: getMovementsByBusinessAPI,
+      getMovementsByStorage: getMovementsByStorageAPI,
+      getMovementsByStock: getMovementsByStockAPI,
     },
     categories: {
       data: categories,

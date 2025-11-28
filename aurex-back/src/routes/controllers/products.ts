@@ -152,6 +152,355 @@ const validateProducts = async (
   return validationResults;
 };
 
+/**
+ * Valida stock disponible sin reservarlo (solo validación)
+ * Retorna información sobre disponibilidad sin modificar el stock
+ */
+const validateStockOnly = async (
+  products: Array<{ ean: string; sku: string; cantidad: number }>,
+  businessId: string
+) => {
+  if (!businessId) {
+    throw new Error("BusinessId is required");
+  }
+
+  const business = await Business.findByPk(businessId);
+  if (!business) {
+    throw new Error("Business not found");
+  }
+
+  const validationResults = [];
+
+  for (const productData of products) {
+    const existingProduct = await Product.findOne({
+      where: {
+        BusinessId: businessId,
+        ean: productData.ean,
+        sku: productData.sku,
+      },
+    });
+
+    if (!existingProduct) {
+      validationResults.push({
+        ean: productData.ean,
+        sku: productData.sku,
+        cantidad: productData.cantidad,
+        exists: false,
+        hasStock: false,
+        availableStock: 0,
+        product: null,
+        error: "Producto no encontrado",
+      });
+      continue;
+    }
+
+    const totalStock = Number(existingProduct.dataValues.totalStock);
+    const reservedStock = Number((existingProduct.dataValues as any).reservedStock || 0);
+    const availableStock = totalStock - reservedStock;
+    const requestedQuantity = Number(productData.cantidad);
+
+    if (availableStock < requestedQuantity) {
+      validationResults.push({
+        ean: productData.ean,
+        sku: productData.sku,
+        cantidad: productData.cantidad,
+        exists: true,
+        hasStock: false,
+        availableStock,
+        totalStock,
+        reservedStock,
+        product: existingProduct.dataValues,
+        error: `Stock insuficiente. Disponible: ${availableStock}, Requerido: ${requestedQuantity}`,
+      });
+      continue;
+    }
+
+    // Solo validar, no reservar
+    validationResults.push({
+      ean: productData.ean,
+      sku: productData.sku,
+      cantidad: productData.cantidad,
+      exists: true,
+      hasStock: true,
+      availableStock,
+      totalStock,
+      reservedStock,
+      product: existingProduct.dataValues,
+      error: null,
+    });
+  }
+
+  return validationResults;
+};
+
+/**
+ * Valida stock disponible y reserva stock para exportaciones
+ * Retorna información sobre disponibilidad y reserva el stock
+ */
+const validateAndReserveStock = async (
+  products: Array<{ ean: string; sku: string; cantidad: number }>,
+  businessId: string
+) => {
+  if (!businessId) {
+    throw new Error("BusinessId is required");
+  }
+
+  const business = await Business.findByPk(businessId);
+  if (!business) {
+    throw new Error("Business not found");
+  }
+
+  const validationResults = [];
+  const transaction = await Product.sequelize?.transaction();
+
+  if (!transaction) {
+    throw new Error("No se pudo crear la transacción de base de datos");
+  }
+
+  try {
+    for (const productData of products) {
+      const existingProduct = await Product.findOne({
+        where: {
+          BusinessId: businessId,
+          ean: productData.ean,
+          sku: productData.sku,
+        },
+        transaction,
+      });
+
+      if (!existingProduct) {
+        validationResults.push({
+          ean: productData.ean,
+          sku: productData.sku,
+          cantidad: productData.cantidad,
+          exists: false,
+          hasStock: false,
+          availableStock: 0,
+          product: null,
+          error: "Producto no encontrado",
+        });
+        continue;
+      }
+
+      const totalStock = Number(existingProduct.dataValues.totalStock);
+      const reservedStock = Number((existingProduct.dataValues as any).reservedStock || 0);
+      const availableStock = totalStock - reservedStock;
+      const requestedQuantity = Number(productData.cantidad);
+
+      if (availableStock < requestedQuantity) {
+        validationResults.push({
+          ean: productData.ean,
+          sku: productData.sku,
+          cantidad: productData.cantidad,
+          exists: true,
+          hasStock: false,
+          availableStock,
+          totalStock,
+          reservedStock,
+          product: existingProduct.dataValues,
+          error: `Stock insuficiente. Disponible: ${availableStock}, Requerido: ${requestedQuantity}`,
+        });
+        continue;
+      }
+
+      // Reservar el stock
+      const newReservedStock = reservedStock + requestedQuantity;
+      await existingProduct.update(
+        {
+          reservedStock: newReservedStock,
+        },
+        { transaction }
+      );
+
+      validationResults.push({
+        ean: productData.ean,
+        sku: productData.sku,
+        cantidad: productData.cantidad,
+        exists: true,
+        hasStock: true,
+        availableStock,
+        totalStock,
+        reservedStock: newReservedStock,
+        product: existingProduct.dataValues,
+        error: null,
+      });
+    }
+
+    await transaction.commit();
+    return validationResults;
+  } catch (error: any) {
+    await transaction.rollback();
+    throw error;
+  }
+};
+
+/**
+ * Valida stock disponible en un almacén específico para egresos
+ * Retorna información sobre disponibilidad de stock en el almacén
+ */
+const validateStockByStorage = async (
+  items: Array<{ ean: string; sku: string; cantidad: number; almacen: string }>,
+  businessId: string
+) => {
+  if (!businessId) {
+    throw new Error("BusinessId is required");
+  }
+
+  const business = await Business.findByPk(businessId);
+  if (!business) {
+    throw new Error("Business not found");
+  }
+
+  const { Storage } = require("../../db");
+  const validationResults = [];
+
+  for (const itemData of items) {
+    // Buscar el producto
+    const product = await Product.findOne({
+      where: {
+        BusinessId: businessId,
+        ean: itemData.ean,
+        sku: itemData.sku,
+      },
+    });
+
+    if (!product) {
+      validationResults.push({
+        ean: itemData.ean,
+        sku: itemData.sku,
+        cantidad: itemData.cantidad,
+        almacen: itemData.almacen,
+        exists: false,
+        hasStock: false,
+        availableStock: 0,
+        product: null,
+        error: "Producto no encontrado",
+      });
+      continue;
+    }
+
+    // Parsear el almacén (formato: R1/A1/9)
+    const almacenParts = itemData.almacen.split("/");
+    if (almacenParts.length !== 3) {
+      validationResults.push({
+        ean: itemData.ean,
+        sku: itemData.sku,
+        cantidad: itemData.cantidad,
+        almacen: itemData.almacen,
+        exists: true,
+        hasStock: false,
+        availableStock: 0,
+        product: product.dataValues,
+        error: "Formato de almacén inválido. Debe ser: Rag/Site/Position",
+      });
+      continue;
+    }
+
+    const rag = almacenParts[0].trim();
+    const site = almacenParts[1].trim();
+    const position = parseInt(almacenParts[2].trim());
+
+    // Buscar el almacén
+    const storage = await Storage.findOne({
+      where: {
+        rag,
+        site,
+      },
+    });
+
+    if (!storage) {
+      validationResults.push({
+        ean: itemData.ean,
+        sku: itemData.sku,
+        cantidad: itemData.cantidad,
+        almacen: itemData.almacen,
+        exists: true,
+        hasStock: false,
+        availableStock: 0,
+        product: product.dataValues,
+        error: `Almacén con Rag "${rag}" y Site "${site}" no encontrado`,
+      });
+      continue;
+    }
+
+    // Validar posición
+    const maxPositions = Number(storage.dataValues.positions);
+    if (isNaN(maxPositions) || maxPositions <= 0 || position > maxPositions) {
+      validationResults.push({
+        ean: itemData.ean,
+        sku: itemData.sku,
+        cantidad: itemData.cantidad,
+        almacen: itemData.almacen,
+        exists: true,
+        hasStock: false,
+        availableStock: 0,
+        product: product.dataValues,
+        error: `Posición ${position} no válida. Máximo permitido: ${maxPositions}`,
+      });
+      continue;
+    }
+
+    // Buscar stock en ese almacén
+    const { Stock } = require("../../db");
+    const stock = await Stock.findOne({
+      where: {
+        ProductId: product.dataValues.id,
+        StorageId: storage.dataValues.id,
+      },
+    });
+
+    if (!stock) {
+      validationResults.push({
+        ean: itemData.ean,
+        sku: itemData.sku,
+        cantidad: itemData.cantidad,
+        almacen: itemData.almacen,
+        exists: true,
+        hasStock: false,
+        availableStock: 0,
+        product: product.dataValues,
+        error: "No hay stock de este producto en el almacén especificado",
+      });
+      continue;
+    }
+
+    // Validar stock disponible
+    const availableStock = Number(stock.dataValues.enabled);
+    const requestedQuantity = Number(itemData.cantidad);
+
+    if (availableStock < requestedQuantity) {
+      validationResults.push({
+        ean: itemData.ean,
+        sku: itemData.sku,
+        cantidad: itemData.cantidad,
+        almacen: itemData.almacen,
+        exists: true,
+        hasStock: false,
+        availableStock,
+        product: product.dataValues,
+        stock: stock.dataValues,
+        error: `Stock insuficiente en almacén. Disponible: ${availableStock}, Requerido: ${requestedQuantity}`,
+      });
+      continue;
+    }
+
+    validationResults.push({
+      ean: itemData.ean,
+      sku: itemData.sku,
+      cantidad: itemData.cantidad,
+      almacen: itemData.almacen,
+      exists: true,
+      hasStock: true,
+      availableStock,
+      product: product.dataValues,
+      stock: stock.dataValues,
+      error: null,
+    });
+  }
+
+  return validationResults;
+};
+
 const getProductsWithStock = async (
   page: number = 1,
   limit: number = 10,
@@ -226,4 +575,7 @@ export {
   disableProduct,
   getProductsWithStock,
   validateProducts,
+  validateStockOnly,
+  validateAndReserveStock,
+  validateStockByStorage,
 };

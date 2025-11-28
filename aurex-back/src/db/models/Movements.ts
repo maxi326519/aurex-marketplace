@@ -12,7 +12,7 @@ export const model = (sequelize: any, DataTypes: any) => {
         allowNull: false,
       },
       type: {
-        type: DataTypes.ENUM("Entrada", "Salida"),
+        type: DataTypes.ENUM("Ingreso", "Egreso", "Transferencia", "Venta"),
         allowNull: false,
       },
       quantity: {

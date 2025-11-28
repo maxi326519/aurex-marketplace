@@ -9,6 +9,7 @@ export interface Product {
   volumeType: VolumeType;
   weight: number;
   totalStock: number;
+  reservedStock?: number;
   status: ProductStatus;
 }
 

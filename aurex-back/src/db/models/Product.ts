@@ -38,6 +38,11 @@ export const model = (sequelize: any, DataTypes: any) => {
         allowNull: false,
         defaultValue: 0,
       },
+      reservedStock: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+        defaultValue: 0,
+      },
       status: {
         type: DataTypes.ENUM("Publicado", "Oculto", "Sin stock"),
         allowNull: false,

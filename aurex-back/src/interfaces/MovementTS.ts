@@ -11,6 +11,8 @@ export interface MovementsTS {
 }
 
 export enum MovementsType {
-  entrada = "ENTRADA",
-  salida = "SALIDA"
+  ingreso = "Ingreso",
+  egreso = "Egreso",
+  transferencia = "Transferencia",
+  venta = "Venta"
 }
