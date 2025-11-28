@@ -1,3 +1,4 @@
+import { BreadcrumbItem } from "./Breadcrumb";
 import { useNavigate } from "react-router-dom";
 import { UserStatus } from "../../interfaces/Users";
 import { useEffect } from "react";
@@ -11,12 +12,14 @@ interface Props {
   title: string;
   children: React.ReactNode;
   requireActiveUser?: boolean;
+  breadcrumb?: BreadcrumbItem[];
 }
 
 export default function DashboardLayout({
   title,
   children,
   requireActiveUser = false,
+  breadcrumb = [],
 }: Props) {
   const { loading, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
@@ -27,13 +30,18 @@ export default function DashboardLayout({
     }
   }, [isAuthenticated, loading]);
 
-  // Si requiere usuario activo y el usuario no está activo, mostrar mensaje de validación
-  if (requireActiveUser && user && user.status !== UserStatus.ACTIVE) {
-    return (
-      <div className="flex w-screen h-screen">
-        <SelletSidebar />
-        <div className="grow flex flex-col bg-gray-200">
-          <Navbar title={title} />
+  return loading ? (
+    <Loading />
+  ) : (
+    <div className="flex w-screen h-screen">
+      <SelletSidebar />
+      <div className="grow flex flex-col bg-gray-200">
+        <Navbar
+          title={title}
+          breadcrumb={breadcrumb}
+          homeHref="/panel/vendedor/dashboard"
+        />
+        {requireActiveUser && user && user.status !== UserStatus.ACTIVE ? (
           <div className="p-5 overflow-y-auto flex items-center justify-center">
             <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center">
               <div className="mb-6">
@@ -66,19 +74,9 @@ export default function DashboardLayout({
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  return loading ? (
-    <Loading />
-  ) : (
-    <div className="flex w-screen h-screen">
-      <SelletSidebar />
-      <div className="grow flex flex-col bg-gray-200">
-        <Navbar title={title} />
-        <div className="p-5 overflow-y-auto">{children}</div>
+        ) : (
+          <div className="p-5 pt-0 overflow-y-auto">{children}</div>
+        )}
       </div>
     </div>
   );

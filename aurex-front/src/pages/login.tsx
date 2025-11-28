@@ -55,7 +55,6 @@ export default function Login() {
 
   function handleSetLogin(email: string, password: string) {
     handleLogin({ email, password }, (user: User | undefined) => {
-      console.log("Redirect");
       if (user?.rol === UserRol.CLIENT) navigate("/");
       if (user?.rol === UserRol.SELLER) navigate("/panel/vendedor/analiticas");
       if (user?.rol === UserRol.ADMIN) navigate("/panel/admin/analiticas");
@@ -85,8 +84,8 @@ export default function Login() {
               onClick={() =>
                 handleLogin(
                   {
-                    email: import.meta.env.VITE_ADMIN_USER,
-                    password: import.meta.env.VITE_ADMIN_PASS,
+                    email: import.meta.env.VITE_CLIENT_USER,
+                    password: import.meta.env.VITE_CLIENT_PASS,
                   },
                   () => navigate("/")
                 )
@@ -113,8 +112,8 @@ export default function Login() {
               onClick={() =>
                 handleLogin(
                   {
-                    email: import.meta.env.VITE_CLIENT_USER,
-                    password: import.meta.env.VITE_CLIENT_PASS,
+                    email: import.meta.env.VITE_ADMIN_USER,
+                    password: import.meta.env.VITE_ADMIN_PASS,
                   },
                   () => navigate("/panel/admin/analiticas")
                 )

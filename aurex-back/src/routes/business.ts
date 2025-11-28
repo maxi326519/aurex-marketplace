@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { verificarToken } from "./controllers/verificacion";
 import { Router } from "express";
 import {
   createBusiness,
@@ -8,7 +9,6 @@ import {
   deleteBusiness,
   getBusinessByUserId,
 } from "./controllers/business";
-import { verificarToken } from "./controllers/verificacion";
 
 const router = Router();
 
@@ -58,24 +58,30 @@ router.get("/:id", verificarToken, async (req: Request, res: Response) => {
 });
 
 // Obtener negocio por ID de usuario
-router.get("/user/:userId", verificarToken, async (req: Request, res: Response) => {
-  try {
-    const { userId } = req.params;
-    const response = await getBusinessByUserId(userId);
-    res.status(200).json(response);
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
+router.get(
+  "/user/:userId",
+  verificarToken,
+  async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.params;
+      const response = await getBusinessByUserId(userId);
+      res.status(200).json(response);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
   }
-});
+);
 
 // Actualizar negocio
-router.patch("/", verificarToken, async (req: Request, res: Response) => {
+router.patch("/:id", verificarToken, async (req: Request, res: Response) => {
   try {
-    const businessData = req.body;
-    await updateBusiness(businessData);
-    res.status(200).json({ msg: "Business updated successfully" });
+    const { id } = req.params;
+    const businessData = { ...req.body, id };
+    const updatedBusiness = await updateBusiness(businessData);
+    res.status(200).json(updatedBusiness);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
+    console.log(error.message);
   }
 });
 

@@ -13,6 +13,7 @@ import Pagos from "./pages/pagos";
 import Search from "./pages/busqueda";
 import ProductDetails from "./pages/ProductDetails";
 
+/* Admin */
 import DashboardPage from "./pages/panel/admin";
 import UsersPage from "./pages/panel/admin/users";
 import SellersPage from "./pages/panel/admin/sellers";
@@ -22,26 +23,28 @@ import LocationsPage from "./pages/panel/admin/storage/locations";
 import InventarioPage from "./pages/panel/admin/storage/inventory";
 import OrdersPage from "./pages/panel/admin/orders/orders";
 
-import SellerProfilePage from "./pages/panel/vendedores/perfil";
+/* Sellers */
 import SellerAnaliticsPage from "./pages/panel/vendedores/analitics";
-import SellersProductsPage from "./pages/panel/vendedores/products/listado";
-import SellersProductsCombosPage from "./pages/panel/vendedores/market/combos";
-import SellersNewProductsPage from "./pages/panel/vendedores/products/alta-manual";
-import SellerOrdersPage from "./pages/panel/vendedores/market/orders";
-import SellersPostsPage from "./pages/panel/vendedores/market/publicaciones";
-import SellersNewPostPage from "./pages/panel/vendedores/market/alta-rapida";
-import CreatePostPage from "./pages/panel/vendedores/market/crear-publicacion";
+import SellerProfilePage from "./pages/panel/vendedores/perfil";
+import SellersProductsPage from "./pages/panel/vendedores/inventario/productos";
+import SellersOrdersPage from "./pages/panel/vendedores/inventario/solicitudes";
+import SellersIngressPage from "./pages/panel/vendedores/inventario/ingreso";
+import SellersEgressPage from "./pages/panel/vendedores/inventario/egreso";
+import ImportProductsPage from "./pages/panel/vendedores/inventario/importar-productos";
+import SellersPostsPage from "./pages/panel/vendedores/tienda/publicaciones";
+import SellersProductsCombosPage from "./pages/panel/vendedores/tienda/combos";
+import CreatePostPage from "./pages/panel/vendedores/tienda/crear-publicacion";
+import SellersSalesPage from "./pages/panel/vendedores/tienda/ventas";
 
-import SellersImportsPage from "./pages/panel/vendedores/products/imports";
-
+/* Clients */
 import ClientsOrdersPage from "./pages/panel/compradores/compras";
 import ComprasChatPage from "./pages/panel/compradores/compras-chat";
 import CompradorPerfilPage from "./pages/panel/compradores/perfil";
 import ReportePage from "./pages/panel/compradores/reporte";
 
-import ReceptionsApproved from "./pages/panel/admin/recepciones/aprobados";
-import ReceptionsHistory from "./pages/panel/admin/recepciones/historial";
-import ReceptionsPending from "./pages/panel/admin/recepciones/pendientes";
+import MovementOrdersApproved from "./pages/panel/admin/recepciones/aprobados";
+import MovementOrdersHistory from "./pages/panel/admin/recepciones/historial";
+import MovementOrdersPending from "./pages/panel/admin/recepciones/pendientes";
 
 import "./App.css";
 
@@ -93,15 +96,15 @@ function App() {
 
         <Route
           path={"/panel/admin/recepciones/pendientes"}
-          element={<ReceptionsPending />}
+          element={<MovementOrdersPending />}
         />
         <Route
           path={"/panel/admin/recepciones/aprobados"}
-          element={<ReceptionsApproved />}
+          element={<MovementOrdersApproved />}
         />
         <Route
           path={"/panel/admin/recepciones/historial"}
-          element={<ReceptionsHistory />}
+          element={<MovementOrdersHistory />}
         />
 
         {/* Dashboard Sellers */}
@@ -113,21 +116,26 @@ function App() {
           path={"/panel/vendedor/perfil"}
           element={<SellerProfilePage />}
         />
-
         <Route
           path={"/panel/vendedor/inventario/productos"}
           element={<SellersProductsPage />}
         />
         <Route
-          path={"/panel/vendedor/inventario/nuevo-producto"}
-          element={<SellersNewProductsPage />}
+          path={"/panel/vendedor/inventario/importar-productos"}
+          element={<ImportProductsPage />}
         />
-
         <Route
-          path={"/panel/vendedor/productos/importacion"}
-          element={<SellersImportsPage />}
+          path={"/panel/vendedor/inventario/solicitudes"}
+          element={<SellersOrdersPage />}
         />
-
+        <Route
+          path={"/panel/vendedor/inventario/solicitudes/ingreso"}
+          element={<SellersIngressPage />}
+        />
+        <Route
+          path={"/panel/vendedor/inventario/solicitudes/egreso"}
+          element={<SellersEgressPage />}
+        />
         <Route
           path={"/panel/vendedor/tienda/publicaciones"}
           element={<SellersPostsPage />}
@@ -136,24 +144,21 @@ function App() {
           path={"/panel/vendedor/tienda/crear-publicacion"}
           element={<CreatePostPage />}
         />
-
         <Route
           path={"/panel/vendedor/tienda/combos"}
           element={<SellersProductsCombosPage />}
         />
         <Route
-          path={"/panel/vendedor/tienda/alta-rapida"}
-          element={<SellersNewPostPage />}
-        />
-
-        <Route
-          path={"/panel/vendedor/ventas/pedidos"}
-          element={<SellerOrdersPage />}
+          path={"/panel/vendedor/tienda/pedidos"}
+          element={<SellersSalesPage />}
         />
 
         {/* Dashboard Compradores */}
         <Route path={"/panel/compras"} element={<ClientsOrdersPage />} />
-        <Route path={"/panel/compras/chat/:chatId"} element={<ComprasChatPage />} />
+        <Route
+          path={"/panel/compras/chat/:chatId"}
+          element={<ComprasChatPage />}
+        />
         <Route path={"/panel/perfil"} element={<CompradorPerfilPage />} />
         <Route path={"/panel/reporte/:orderId"} element={<ReportePage />} />
       </Routes>

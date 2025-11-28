@@ -35,14 +35,6 @@ export const model = (sequelize: any, DataTypes: any) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      taxId: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      bankAccount: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
       averageScore: {
         type: DataTypes.DECIMAL(3, 2),
         allowNull: true,

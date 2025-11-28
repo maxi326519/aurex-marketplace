@@ -306,7 +306,6 @@ function Home() {
                   description={product.content}
                   productInfo={{
                     sku: product.product?.sku,
-                    category: product.product?.category1,
                     stock: product.product?.totalStock,
                     status: product.status
                   }}
@@ -386,7 +385,6 @@ function Home() {
                     description={product.content}
                     productInfo={{
                       sku: product.product?.sku,
-                      category: product.product?.category1,
                       stock: product.product?.totalStock,
                       status: product.status
                     }}

@@ -312,13 +312,13 @@ export default function PaymentOptionsForm({
               <div className="space-y-3">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <Input
-                    name="cvu"
-                    label="CVU"
-                    value={transferForm.cvu}
+                    name="pasarela"
+                    label="Banco"
+                    value={linkForm.pasarela}
                     onChange={(e) =>
-                      setTransferForm((prev) => ({
+                      setLinkForm((prev) => ({
                         ...prev,
-                        cvu: e.target.value,
+                        pasarela: e.target.value,
                       }))
                     }
                   />

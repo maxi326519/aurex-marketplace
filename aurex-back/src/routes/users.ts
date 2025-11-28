@@ -12,7 +12,7 @@ import {
 
 const router = Router();
 
-router.post("/", verificarAdmin, async (req: Request, res: Response) => {
+router.post("/", /* verificarAdmin, */ async (req: Request, res: Response) => {
   try {
     const user = req.body;
     const response = await setUser(user);
@@ -35,7 +35,7 @@ router.post("/", verificarAdmin, async (req: Request, res: Response) => {
   }
 });
 
-router.get("/", verificarAdmin, async (_, res: Response) => {
+router.get("/", /* verificarAdmin, */ async (_, res: Response) => {
   try {
     const response = await getAllUsers();
     res.status(200).json(response);
@@ -44,7 +44,7 @@ router.get("/", verificarAdmin, async (_, res: Response) => {
   }
 });
 
-router.patch("/", verificarAdmin, async (req: Request, res: Response) => {
+router.patch("/", /* verificarAdmin, */ async (req: Request, res: Response) => {
   try {
     const userData = req.body;
     await updateUser(userData);
@@ -54,7 +54,7 @@ router.patch("/", verificarAdmin, async (req: Request, res: Response) => {
   }
 });
 
-router.patch("/:id", verificarAdmin, async (req, res) => {
+router.patch("/:id", /* verificarAdmin, */ async (req, res) => {
   try {
     const { id } = req.params;
     const { disabled } = req.body;
@@ -74,7 +74,7 @@ router.patch("/:id", verificarAdmin, async (req, res) => {
   }
 });
 
-router.delete("/:id", verificarAdmin, async (req, res) => {
+router.delete("/:id", /* verificarAdmin, */ async (req, res) => {
   try {
     const { id } = req.params;
     const result = await deleteUser(id);
@@ -86,7 +86,7 @@ router.delete("/:id", verificarAdmin, async (req, res) => {
 });
 
 // Ruta para obtener vendedores con datos de empresa (solo administradores)
-router.get("/sellers", verificarAdmin, async (req: Request, res: Response) => {
+router.get("/sellers", /* verificarAdmin, */ async (req: Request, res: Response) => {
   try {
     const sellers = await User.findAll({
       where: { rol: "Vendedor" },

@@ -9,5 +9,5 @@ export interface BusinessTS {
   zipCode: string;
   taxId: string;
   bankAccount: string;
-  userId?: string;
+  UserId?: string;
 }

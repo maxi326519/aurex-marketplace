@@ -29,8 +29,6 @@ export interface OrderItemManagement extends OrderItem {
     sku: string;
     ean: string;
     position?: string; // Posición en el depósito
-    category1: string;
-    category2: string;
   };
   pickedQuantity?: number;
   scannedEAN?: string;

@@ -7,6 +7,7 @@ export interface MovementsTS {
   StorageId?: string;
   UserId?: string;
   StockId?: string;
+  MovementOrderId?: string;
 }
 
 export enum MovementsType {

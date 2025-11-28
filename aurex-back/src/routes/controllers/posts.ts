@@ -13,16 +13,16 @@ async function createPost(post: PostsTS) {
     console.log(post);
 
     const newPost = await Post.create({ ...post });
-    
+
     // Incluir datos del producto en la respuesta
     const postWithProduct = await Post.findByPk(newPost.dataValues.id, {
       include: [
         {
           model: Product,
           as: "product",
-          attributes: ["id", "name", "sku", "ean", "category1", "category2", "totalStock", "status"]
-        }
-      ]
+          attributes: ["id", "name", "sku", "ean", "totalStock", "status"],
+        },
+      ],
     });
 
     return postWithProduct;
@@ -36,8 +36,6 @@ async function getAllPosts(filters?: {
   userId?: string;
   marketplace?: boolean;
   title?: string;
-  category1?: string;
-  category2?: string;
   minPrice?: number;
   maxPrice?: number;
   status?: string;
@@ -48,19 +46,19 @@ async function getAllPosts(filters?: {
       {
         model: Product,
         as: "product",
-        attributes: ["id", "name", "sku", "ean", "category1", "category2", "totalStock", "status"]
-      }
+        attributes: ["id", "name", "sku", "ean", "totalStock", "status"],
+      },
     ];
 
     // Filtros para marketplace (solo datos básicos)
     if (filters?.marketplace) {
-      includeClause[0].attributes = ["id", "name", "sku", "category1", "category2", "status"];
+      includeClause[0].attributes = ["id", "name", "sku", "status"];
     }
 
     // Filtros por datos de la publicación
     if (filters?.title) {
       whereClause.title = {
-        [Op.iLike]: `%${filters.title}%`
+        [Op.iLike]: `%${filters.title}%`,
       };
     }
 
@@ -71,17 +69,15 @@ async function getAllPosts(filters?: {
     }
 
     // Filtros por datos del producto
-    if (filters?.category1 || filters?.category2 || filters?.status) {
+    if (filters?.status) {
       includeClause[0].where = {};
-      if (filters.category1) includeClause[0].where.category1 = filters.category1;
-      if (filters.category2) includeClause[0].where.category2 = filters.category2;
       if (filters.status) includeClause[0].where.status = filters.status;
     }
 
     const posts = await Post.findAll({
       where: whereClause,
       include: includeClause,
-      order: [["date", "DESC"]]
+      order: [["date", "DESC"]],
     });
 
     return posts;
@@ -98,9 +94,9 @@ async function getPostById(postId: string) {
         {
           model: Product,
           as: "product",
-          attributes: ["id", "name", "sku", "ean", "category1", "category2", "totalStock", "status"]
-        }
-      ]
+          attributes: ["id", "name", "sku", "ean", "totalStock", "status"],
+        },
+      ],
     });
 
     if (!post) {
@@ -122,17 +118,17 @@ async function getPostsByUser(userId: string) {
         {
           model: Product,
           as: "product",
-          attributes: ["id", "name", "sku", "ean", "category1", "category2", "totalStock", "status"],
+          attributes: ["id", "name", "sku", "ean", "totalStock", "status"],
           include: [
             {
               model: OrderItem,
               as: "orderItems",
-              attributes: ["id", "quantity", "price"]
-            }
-          ]
-        }
+              attributes: ["id", "quantity", "price"],
+            },
+          ],
+        },
       ],
-      order: [["date", "DESC"]]
+      order: [["date", "DESC"]],
     });
 
     return posts;
@@ -151,7 +147,10 @@ async function updatePost(post: PostsTS) {
     }
 
     // Si se está cambiando el producto, verificar que existe
-    if (post.productId && post.productId !== existingPost.dataValues.productId) {
+    if (
+      post.productId &&
+      post.productId !== existingPost.dataValues.productId
+    ) {
       const product = await Product.findByPk(post.productId);
       if (!product) {
         throw new Error("Product not found");
@@ -172,9 +171,9 @@ async function updatePost(post: PostsTS) {
         {
           model: Product,
           as: "product",
-          attributes: ["id", "name", "sku", "ean", "category1", "category2", "totalStock", "status"]
-        }
-      ]
+          attributes: ["id", "name", "sku", "ean", "totalStock", "status"],
+        },
+      ],
     });
 
     return updatedPost;
@@ -210,4 +209,11 @@ async function deletePost(postId: string) {
   }
 }
 
-export { createPost, getAllPosts, getPostById, getPostsByUser, updatePost, deletePost };
+export {
+  createPost,
+  getAllPosts,
+  getPostById,
+  getPostsByUser,
+  updatePost,
+  deletePost,
+};

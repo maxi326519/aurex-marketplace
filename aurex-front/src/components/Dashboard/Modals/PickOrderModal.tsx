@@ -117,10 +117,6 @@ export default function PickOrderModal({
                     {item.product.position && (
                       <p>Posición: {item.product.position}</p>
                     )}
-                    <p>
-                      Categoría: {item.product.category1} -{" "}
-                      {item.product.category2}
-                    </p>
                   </div>
                 </div>
                 <div className="text-right">

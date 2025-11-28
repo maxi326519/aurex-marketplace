@@ -22,28 +22,28 @@ export const getAllOrders = async (req: Request, res: Response) => {
             {
               model: Product,
               as: "product",
-              attributes: ["id", "name", "sku", "ean", "category1", "category2", "totalStock", "status"]
-            }
-          ]
+              attributes: ["id", "name", "sku", "ean", "totalStock", "status"],
+            },
+          ],
         },
         {
           model: User,
           as: "User",
-          attributes: ["id", "name", "email"]
+          attributes: ["id", "name", "email"],
         },
         {
           model: Business,
           as: "Business",
-          attributes: ["id", "name", "type", "address", "city", "state"]
-        }
+          attributes: ["id", "name", "type", "address", "city", "state"],
+        },
       ],
       limit: Number(limit),
       offset: Number(offset),
-      order: [["createdAt", "DESC"]]
+      order: [["createdAt", "DESC"]],
     });
 
     // Transformar datos para incluir información del cliente
-    const ordersWithClientInfo = orders.rows.map(order => ({
+    const ordersWithClientInfo = orders.rows.map((order) => ({
       ...order.toJSON(),
       clientName: "Cliente Marketplace", // Por ahora hardcodeado, después se puede obtener de User
       clientEmail: "cliente@marketplace.com",
@@ -53,15 +53,15 @@ export const getAllOrders = async (req: Request, res: Response) => {
         city: "Ciudad",
         state: "Estado",
         zipCode: "12345",
-        country: "País"
-      }
+        country: "País",
+      },
     }));
 
     return res.json({
       orders: ordersWithClientInfo,
       total: orders.count,
       limit: Number(limit),
-      offset: Number(offset)
+      offset: Number(offset),
     });
   } catch (error) {
     console.error("❌ Error al obtener las órdenes:", error);
@@ -83,21 +83,21 @@ export const getOrderById = async (req: Request, res: Response) => {
             {
               model: Product,
               as: "product",
-              attributes: ["id", "name", "sku", "ean", "category1", "category2", "totalStock", "status"]
-            }
-          ]
+              attributes: ["id", "name", "sku", "ean", "totalStock", "status"],
+            },
+          ],
         },
         {
           model: User,
           as: "User",
-          attributes: ["id", "name", "email"]
+          attributes: ["id", "name", "email"],
         },
         {
           model: Business,
           as: "Business",
-          attributes: ["id", "name", "type", "address", "city", "state"]
-        }
-      ]
+          attributes: ["id", "name", "type", "address", "city", "state"],
+        },
+      ],
     });
 
     if (!order) {
@@ -114,8 +114,8 @@ export const getOrderById = async (req: Request, res: Response) => {
         city: "Ciudad",
         state: "Estado",
         zipCode: "12345",
-        country: "País"
-      }
+        country: "País",
+      },
     };
 
     return res.json(orderWithClientInfo);
@@ -127,7 +127,16 @@ export const getOrderById = async (req: Request, res: Response) => {
 
 // Crear una nueva orden con items
 export const createOrder = async (req: Request, res: Response) => {
-  const { date, status, quantity, supplier, totalAmount, items, userId, businessId } = req.body;
+  const {
+    date,
+    status,
+    quantity,
+    supplier,
+    totalAmount,
+    items,
+    userId,
+    businessId,
+  } = req.body;
 
   const t = await Order.sequelize?.transaction();
   try {
@@ -220,20 +229,26 @@ export const pickOrder = async (req: Request, res: Response) => {
     }
 
     if ((order as any).status !== OrdersStatus.PENDING) {
-      return res.status(400).json({ error: "La orden no está en estado pendiente" });
+      return res
+        .status(400)
+        .json({ error: "La orden no está en estado pendiente" });
     }
 
     // Actualizar estado a PREPARED
-    await order.update({ 
+    await order.update({
       status: OrdersStatus.PREPARED,
-      pickedAt: new Date()
+      pickedAt: new Date(),
     });
 
     // Actualizar cantidades pickeadas en los items
     if (Array.isArray(items)) {
       for (const item of items) {
         await OrderItem.update(
-          { pickedQuantity: item.quantity, isPicked: true, pickedAt: new Date() },
+          {
+            pickedQuantity: item.quantity,
+            isPicked: true,
+            pickedAt: new Date(),
+          },
           { where: { id: item.itemId, orderId } }
         );
       }
@@ -254,7 +269,7 @@ export const scanProduct = async (req: Request, res: Response) => {
 
     const orderItem = await OrderItem.findOne({
       where: { id: itemId, orderId },
-      include: [{ model: Product, as: "product" }]
+      include: [{ model: Product, as: "product" }],
     });
 
     if (!orderItem) {
@@ -269,7 +284,7 @@ export const scanProduct = async (req: Request, res: Response) => {
       await orderItem.update({
         scannedEAN: ean,
         isScanned: true,
-        scannedAt: new Date()
+        scannedAt: new Date(),
       });
     }
 
@@ -287,7 +302,7 @@ export const egressOrder = async (req: Request, res: Response) => {
     const { trackingNumber, courier, notes } = req.body;
 
     const order = await Order.findByPk(orderId, {
-      include: [{ model: OrderItem, as: "items" }]
+      include: [{ model: OrderItem, as: "items" }],
     });
 
     if (!order) {
@@ -295,13 +310,19 @@ export const egressOrder = async (req: Request, res: Response) => {
     }
 
     if ((order as any).status !== OrdersStatus.PREPARED) {
-      return res.status(400).json({ error: "La orden no está en estado preparado" });
+      return res
+        .status(400)
+        .json({ error: "La orden no está en estado preparado" });
     }
 
     // Verificar que todos los productos estén escaneados
-    const allScanned = (order as any).items.every((item: any) => item.isScanned);
+    const allScanned = (order as any).items.every(
+      (item: any) => item.isScanned
+    );
     if (!allScanned) {
-      return res.status(400).json({ error: "Todos los productos deben estar escaneados" });
+      return res
+        .status(400)
+        .json({ error: "Todos los productos deben estar escaneados" });
     }
 
     // Actualizar orden con información de envío
@@ -311,7 +332,7 @@ export const egressOrder = async (req: Request, res: Response) => {
       courier,
       notes,
       preparedAt: new Date(),
-      completedAt: new Date()
+      completedAt: new Date(),
     });
 
     return res.json({ message: "Orden preparada con éxito" });
@@ -332,7 +353,9 @@ export const cancelOrder = async (req: Request, res: Response) => {
     }
 
     if ((order as any).status === OrdersStatus.COMPLETED) {
-      return res.status(400).json({ error: "No se puede cancelar una orden completada" });
+      return res
+        .status(400)
+        .json({ error: "No se puede cancelar una orden completada" });
     }
 
     await order.update({ status: OrdersStatus.CANCELED });

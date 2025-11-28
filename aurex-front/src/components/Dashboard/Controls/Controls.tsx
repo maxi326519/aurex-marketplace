@@ -6,27 +6,44 @@ import searchSvg from "../../../assets/svg/dashboard/search.svg";
 import Button from "../../ui/Button";
 
 export type BtnConfig = Array<{
-  label: string;
+  label?: string;
+  leftIcon?: React.ReactNode;
+  component?: React.ReactNode;
   onClick: () => void;
 }>;
 
-interface Props<T> {
-  data: T[];
+interface Props {
+  filtersData?: Record<string, any>;
   filtersConfig?: FilterConfig;
   btnConfig?: BtnConfig;
-  onFilter?: (data: T[]) => void;
+  onFilter?: (filters: Record<string, any>) => void;
+  onApplyFilters?: () => void;
+  onResetFilters?: () => void;
+  searchTerm?: string;
+  onSearchChange?: (term: string) => void;
 }
 
-export default function Controls<T>({
-  data,
+export default function Controls({
+  filtersData,
   filtersConfig,
   btnConfig,
   onFilter,
-}: Props<T>) {
-  const [search, setSearch] = useState("");
+  onApplyFilters,
+  onResetFilters,
+  searchTerm = "",
+  onSearchChange,
+}: Props) {
+  const [internalSearch, setInternalSearch] = useState("");
+
+  const search = searchTerm !== undefined ? searchTerm : internalSearch;
 
   function handleSearch(event: React.ChangeEvent<HTMLInputElement>) {
-    setSearch(event.target.value);
+    const value = event.target.value;
+    if (onSearchChange) {
+      onSearchChange(value);
+    } else {
+      setInternalSearch(value);
+    }
   }
 
   return (
@@ -39,29 +56,36 @@ export default function Controls<T>({
             value={search}
             onChange={handleSearch}
           />
-          <button>
+          <button title="Buscar" type="button">
             <img src={searchSvg} alt="" />
           </button>
         </div>
-        {filtersConfig && onFilter && (
+        {filtersData && filtersConfig && onFilter && (
           <Filters
-            data={data}
             config={filtersConfig}
+            filters={filtersData}
             onChange={onFilter}
-            onReset={() => onFilter(data)}
+            onApply={onApplyFilters || (() => {})}
+            onReset={onResetFilters || (() => {})}
           />
         )}
       </div>
       {btnConfig && (
         <div className={styles.btnContainer}>
-          {btnConfig.map((btn) => (
-            <Button
-              type="primary"
-              className="btn-primary"
-              onClick={btn.onClick}
-            >
-              {btn.label}
-            </Button>
+          {btnConfig.map((btn, index) => (
+            btn.component ? (
+              <React.Fragment key={index}>{btn.component}</React.Fragment>
+            ) : (
+              <Button
+                key={index}
+                type="primary"
+                className="btn-primary"
+                onClick={btn.onClick}
+              >
+                {btn.leftIcon}
+                {btn.label}
+              </Button>
+            )
           ))}
         </div>
       )}

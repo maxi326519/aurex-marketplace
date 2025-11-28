@@ -3,12 +3,12 @@ import { Post, initPost } from "../../../interfaces/Posts";
 import { Product } from "../../../interfaces/Product";
 import usePosts from "../../../hooks/Dashboard/posts/usePosts";
 import useProducts from "../../../hooks/Dashboard/products/useProduct";
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 import Button from "../../ui/Button";
 import Input from "../Inputs/Input";
-import SelectById from "../../ui/Inputs/SelectById";
+import SearchSelect from "../Inputs/SearchSelect";
 import TextAreaInput from "../../ui/Inputs/Textarea";
 import Checkbox from "../../ui/Inputs/Checkbox";
 
@@ -25,14 +25,52 @@ export default function CreatePostForm({
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [productSearchTerm, setProductSearchTerm] = useState<string>("");
+  const [productList, setProductList] = useState<Array<{ key: string; value: string }>>([]);
 
   const posts = usePosts();
   const products = useProducts();
 
   useEffect(() => {
-    // Cargar productos al montar el componente
-    products.get();
+    // Cargar productos iniciales al montar el componente
+    products.get(1, 50).then(() => {
+      updateProductList("");
+    });
   }, []);
+
+  // Actualizar lista de productos cuando cambian los datos o el término de búsqueda
+  useEffect(() => {
+    updateProductList(productSearchTerm);
+  }, [products.data, productSearchTerm]);
+
+  const updateProductList = (searchTerm: string) => {
+    const filtered = products.data
+      .filter((product) => {
+        if (!searchTerm) return true;
+        const term = searchTerm.toLowerCase();
+        return (
+          product.name.toLowerCase().includes(term) ||
+          product.sku.toLowerCase().includes(term) ||
+          product.ean.toLowerCase().includes(term)
+        );
+      })
+      .map((product) => ({
+        key: product.id || "",
+        value: `${product.sku} - ${product.name}`,
+      }));
+    setProductList(filtered);
+  };
+
+  const handleProductSearch = (searchTerm: string) => {
+    setProductSearchTerm(searchTerm);
+    // Si hay un término de búsqueda, buscar en el servidor
+    if (searchTerm) {
+      products.searchProducts(searchTerm);
+    } else {
+      // Si está vacío, cargar productos iniciales
+      products.get(1, 50);
+    }
+  };
 
   const handleInputChange = (field: keyof Post, value: string | number) => {
     setFormData((prev) => ({
@@ -95,7 +133,6 @@ export default function CreatePostForm({
     }
   };
 
-
   const handleFeatureChange = (
     index: number,
     key: "name" | "value",
@@ -148,8 +185,8 @@ export default function CreatePostForm({
     });
   };
 
-  const handleProductSelect = (productId: string) => {
-    const product = products.data.find((p) => p.id === productId);
+  const handleProductSelect = (item: { key: string; value: string }) => {
+    const product = products.data.find((p) => p.id === item.key);
     if (product) {
       setSelectedProduct(product);
       setFormData((prev) => ({
@@ -157,9 +194,16 @@ export default function CreatePostForm({
         productId: product.id ?? "",
         price: product.price || 0,
       }));
+    } else if (!item.key) {
+      // Si se limpió la selección
+      setSelectedProduct(null);
+      setFormData((prev) => ({
+        ...prev,
+        productId: "",
+        price: 0,
+      }));
     }
   };
-
 
   const handleSubmit = async () => {
     console.log(1);
@@ -195,33 +239,28 @@ export default function CreatePostForm({
         className="space-y-6"
       >
         {/* Selección de Producto */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Producto *
-          </label>
-          <SelectById
-            name="productId"
-            label="Producto"
-            list={products.data.map((product) => ({
-              id: product.id || "",
-              label: product.name,
-            }))}
-            value={formData.productId || ""}
-            onChange={(e) => handleProductSelect(e.target.value)}
-            error={errors.productId}
-          />
-          {selectedProduct && (
-            <div className="mt-2 p-3 bg-gray-50 rounded-md">
-              <p className="text-sm text-gray-600">
-                <strong>Producto seleccionado:</strong> {selectedProduct.name}
-              </p>
-              <p className="text-sm text-gray-500">
-                SKU: {selectedProduct.sku} | Categoría:{" "}
-                {selectedProduct.category1} - {selectedProduct.category2}
-              </p>
-            </div>
-          )}
-        </div>
+        <SearchSelect
+          name="productId"
+          label="Producto *"
+          value={formData.productId || ""}
+          list={productList}
+          loading={products.loading.search || products.loading.get}
+          onSearch={handleProductSearch}
+          onSelect={handleProductSelect}
+          error={errors.productId}
+          placeholder="Buscar por SKU, EAN o nombre..."
+          displayValue={selectedProduct ? `${selectedProduct.sku} - ${selectedProduct.name}` : undefined}
+        />
+        {selectedProduct && (
+          <div className="mt-2 p-3 bg-gray-50 rounded-md">
+            <p className="text-sm text-gray-600">
+              <strong>Producto seleccionado:</strong> {selectedProduct.name} (SKU: {selectedProduct.sku}, EAN: {selectedProduct.ean})
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              Precio base: ${selectedProduct.price}
+            </p>
+          </div>
+        )}
 
         {/* Título */}
         <Input
@@ -293,14 +332,19 @@ export default function CreatePostForm({
             theme="snow"
             modules={{
               toolbar: [
-                [{ 'header': [1, 2, false] }],
-                ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-                [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
-                ['link', 'image'],
-                ['clean']
+                [{ header: [1, 2, false] }],
+                ["bold", "italic", "underline", "strike", "blockquote"],
+                [
+                  { list: "ordered" },
+                  { list: "bullet" },
+                  { indent: "-1" },
+                  { indent: "+1" },
+                ],
+                ["link", "image"],
+                ["clean"],
               ],
             }}
-            className={errors.content ? 'border-red-500' : ''}
+            className={errors.content ? "border-red-500" : ""}
           />
           {errors.content && (
             <p className="mt-1 text-sm text-red-600">{errors.content}</p>

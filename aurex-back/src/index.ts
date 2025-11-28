@@ -1,7 +1,6 @@
 import { initData } from "./initData";
 import { conn } from "./db";
 import app from "./app";
-require("./db");
 
 const PORT = process.env.PORT || 3001;
 
@@ -9,10 +8,20 @@ if (process.argv.includes("--init-data")) {
   // Set init data
   initData();
 } else {
-  conn.sync({ force: false, alter: true }).then(async () => {
-    // Open server
-    app.listen(PORT, () => {
-      console.log(`Server listening in port ${PORT}`);
+  console.log(7);
+  // Verificar conexión sin sincronizar (más eficiente)
+  conn.authenticate()
+    .then(() => {
+      console.log(8);
+      console.log("Database connection established successfully.");
+      // Open server
+      app.listen(PORT, () => {
+        console.log(9);
+        console.log(`Server listening in port ${PORT}`);
+      });
+    })
+    .catch((err) => {
+      console.error("Unable to connect to the database:", err);
+      process.exit(1);
     });
-  });
 }

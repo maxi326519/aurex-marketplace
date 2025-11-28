@@ -9,7 +9,9 @@ import TextAreaInput from "../../ui/Inputs/Textarea";
 interface CreateBusinessModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreateBusiness: (data: Omit<Business, 'id' | 'averageScore' | 'userId'>) => Promise<void>;
+  onCreateBusiness: (
+    data: Omit<Business, "id" | "averageScore" | "userId">
+  ) => Promise<void>;
   loading: boolean;
 }
 
@@ -27,22 +29,22 @@ export default function CreateBusinessModal({
     city: "",
     state: "",
     zipCode: "",
-    taxId: "",
-    bankAccount: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
-    
+
     // Limpiar error del campo cuando el usuario empiece a escribir
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
         [name]: "",
       }));
@@ -80,30 +82,21 @@ export default function CreateBusinessModal({
       newErrors.zipCode = "El código postal es obligatorio";
     }
 
-    if (!formData.taxId.trim()) {
-      newErrors.taxId = "El CUIT/CUIL es obligatorio";
-    }
-
-    if (!formData.bankAccount.trim()) {
-      newErrors.bankAccount = "La cuenta bancaria es obligatoria";
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+    // e.preventDefault();
 
-    try {
-      await onCreateBusiness(formData);
-      handleClose();
-    } catch (error) {
-      console.error("Error creating business:", error);
+    if (validateForm()) {
+      try {
+        console.log(formData);
+        await onCreateBusiness(formData);
+        handleClose();
+      } catch (error) {
+        console.error("Error creating business:", error);
+      }
     }
   };
 
@@ -116,8 +109,6 @@ export default function CreateBusinessModal({
       city: "",
       state: "",
       zipCode: "",
-      taxId: "",
-      bankAccount: "",
     });
     setErrors({});
     onClose();
@@ -173,7 +164,9 @@ export default function CreateBusinessModal({
           />
 
           <div className="space-y-4">
-            <h3 className="font-medium text-gray-700">Información de Contacto</h3>
+            <h3 className="font-medium text-gray-700">
+              Información de Contacto
+            </h3>
             <Input
               name="address"
               label="Dirección *"
@@ -206,28 +199,6 @@ export default function CreateBusinessModal({
                 onChange={handleInputChange}
                 disabled={loading}
                 error={errors.zipCode}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-700">Información Fiscal</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                name="taxId"
-                label="CUIT/CUIL *"
-                value={formData.taxId}
-                onChange={handleInputChange}
-                disabled={loading}
-                error={errors.taxId}
-              />
-              <Input
-                name="bankAccount"
-                label="Cuenta bancaria *"
-                value={formData.bankAccount}
-                onChange={handleInputChange}
-                disabled={loading}
-                error={errors.bankAccount}
               />
             </div>
           </div>

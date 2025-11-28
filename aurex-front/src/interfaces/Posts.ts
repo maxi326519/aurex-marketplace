@@ -22,8 +22,6 @@ export interface Post {
     name: string;
     sku: string;
     ean: string;
-    category1: string;
-    category2: string;
     totalStock: number;
     status: PostStatus;
   };

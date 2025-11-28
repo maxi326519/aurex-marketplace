@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
+import { useAuthStore } from "../../../hooks/Auth/useAuthStore";
+import { useBusiness } from "../../../hooks/Dashboard/useBusiness";
 import { Business } from "../../../interfaces/Business";
 import { useAuth } from "../../../hooks/Auth/useAuth";
-import { useBusiness } from "../../../hooks/Dashboard/useBusiness";
 import {
   UserRol,
   UserStatus,
   User as UserInterface,
 } from "../../../interfaces/Users";
+import axios from "axios";
+import Swal from "sweetalert2";
 
 import DashboardLayout from "../../../components/Dashboard/SellerDashboard";
 import UserProfile from "../../../components/Dashboard/profile/UserProfile";
@@ -28,19 +31,26 @@ export interface User {
 
 export default function SellerProfilePage() {
   const { user } = useAuth();
+  const { setUser } = useAuthStore();
   const {
     business,
     paymentOptions,
     loading,
     createBusiness,
-    getBusiness,
+    getBusinessByUserId,
     updateBusiness,
     createPaymentOption,
     deletePaymentOption,
     refreshPaymentOptions,
   } = useBusiness();
-  const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
+  
+  // Estados de edición separados
+  const [editingUser, setEditingUser] = useState(false);
+  const [editingBusiness, setEditingBusiness] = useState(false);
+  
+  // Estados de guardado separados
+  const [savingUser, setSavingUser] = useState(false);
+  const [savingBusiness, setSavingBusiness] = useState(false);
 
   // Estados para edición
   const [editedUser, setEditedUser] = useState<UserInterface | null>(null);
@@ -64,17 +74,26 @@ export default function SellerProfilePage() {
   }, [user, business]);
 
   const loadData = async () => {
-    if (!user?.businessId) return;
+    if (!user?.id) return;
 
     try {
-      // Cargar datos del negocio si no existen
+      // Cargar datos del negocio por userId
       if (!business) {
-        await getBusiness(user.businessId);
-      }
-
-      // Cargar opciones de pago
-      if (business?.id) {
-        await refreshPaymentOptions();
+        try {
+          const loadedBusiness = await getBusinessByUserId(user.id);
+          // Cargar opciones de pago después de obtener el negocio
+          if (loadedBusiness?.id) {
+            await refreshPaymentOptions();
+          }
+        } catch (error: any) {
+          // Si no existe negocio, no es un error crítico
+          console.log("No se encontró negocio para este usuario:", error.message);
+        }
+      } else {
+        // Si ya tenemos el negocio, cargar opciones de pago
+        if (business.id) {
+          await refreshPaymentOptions();
+        }
       }
     } catch (error) {
       console.error("Error loading data:", error);
@@ -137,16 +156,25 @@ export default function SellerProfilePage() {
     }
   };
 
-  // Funciones para edición
-  const handleEditClick = () => {
-    setEditing(true);
+  // Funciones para edición del usuario
+  const handleEditUserClick = () => {
+    setEditingUser(true);
     setEditedUser(user);
+  };
+
+  const handleCancelUserEdit = () => {
+    setEditingUser(false);
+    setEditedUser(user);
+  };
+
+  // Funciones para edición del negocio
+  const handleEditBusinessClick = () => {
+    setEditingBusiness(true);
     setEditedBusiness(business);
   };
 
-  const handleCancelEdit = () => {
-    setEditing(false);
-    setEditedUser(user);
+  const handleCancelBusinessEdit = () => {
+    setEditingBusiness(false);
     setEditedBusiness(business);
   };
 
@@ -170,24 +198,44 @@ export default function SellerProfilePage() {
     setEditedBusiness((prev) => (prev ? { ...prev, [name]: value } : null));
   };
 
-  const handleSaveChanges = async () => {
-    if (!editedUser || !editedBusiness) return;
+  // Función para guardar cambios del usuario
+  const handleSaveUserChanges = async () => {
+    if (!editedUser || !user?.id) return;
 
-    setSaving(true);
+    setSavingUser(true);
+    try {
+      // Actualizar usuario en el backend
+      await axios.patch("/users", editedUser);
+      
+      // Actualizar usuario en el store de autenticación (el token se mantiene separado)
+      setUser(editedUser);
+      
+      Swal.fire("Éxito", "Perfil de usuario actualizado correctamente", "success");
+      setEditingUser(false);
+    } catch (error) {
+      console.error("Error saving user changes:", error);
+      Swal.fire("Error", "Error al actualizar el perfil de usuario", "error");
+    } finally {
+      setSavingUser(false);
+    }
+  };
+
+  // Función para guardar cambios del negocio
+  const handleSaveBusinessChanges = async () => {
+    if (!editedBusiness || !business?.id) return;
+
+    setSavingBusiness(true);
     try {
       // Actualizar datos del negocio
-      if (business?.id) {
-        await updateBusiness(business.id, editedBusiness);
-      }
-
-      console.log("Saving user data:", editedUser);
-      console.log("Saving business data:", editedBusiness);
-
-      setEditing(false);
+      await updateBusiness(business.id, editedBusiness);
+      
+      Swal.fire("Éxito", "Información del negocio actualizada correctamente", "success");
+      setEditingBusiness(false);
     } catch (error) {
-      console.error("Error saving changes:", error);
+      console.error("Error saving business changes:", error);
+      Swal.fire("Error", "Error al actualizar la información del negocio", "error");
     } finally {
-      setSaving(false);
+      setSavingBusiness(false);
     }
   };
 
@@ -206,11 +254,11 @@ export default function SellerProfilePage() {
         <div className="lg:col-span-1">
           <UserProfile
             user={user}
-            editing={editing}
-            saving={saving}
-            onEditClick={handleEditClick}
-            onCancelEdit={handleCancelEdit}
-            onSaveChanges={handleSaveChanges}
+            editing={editingUser}
+            saving={savingUser}
+            onEditClick={handleEditUserClick}
+            onCancelEdit={handleCancelUserEdit}
+            onSaveChanges={handleSaveUserChanges}
             onUserDataChange={handleUserDataChange}
             editedUser={editedUser}
           />
@@ -220,12 +268,12 @@ export default function SellerProfilePage() {
         <div className="lg:col-span-1">
           <SellerProfileForm
             business={business}
-            editing={editing}
-            saving={saving}
+            editing={editingBusiness}
+            saving={savingBusiness}
             onCreateBusiness={handleCreateBusiness}
-            onEditClick={handleEditClick}
-            onCancelEdit={handleCancelEdit}
-            onSaveChanges={handleSaveChanges}
+            onEditClick={handleEditBusinessClick}
+            onCancelEdit={handleCancelBusinessEdit}
+            onSaveChanges={handleSaveBusinessChanges}
             onBusinessDataChange={handleBusinessDataChange}
             onBusinessTextareaChange={handleBusinessTextareaChange}
             editedBusiness={editedBusiness}

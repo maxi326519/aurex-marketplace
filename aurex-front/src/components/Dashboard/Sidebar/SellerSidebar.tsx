@@ -3,14 +3,13 @@ import {
   User,
   ShoppingBag,
   Boxes,
-  FilePlus2,
   ClipboardList,
   BarChart3,
-  Store,
-  TrendingUp,
-  PackageSearch,
-  Layers,
-  FileInput,
+  Package,
+  Archive,
+  Inbox,
+  PackagePlus,
+  PackageMinus,
 } from "lucide-react";
 
 const sections: SideSection[] = [
@@ -33,88 +32,66 @@ const sections: SideSection[] = [
     title: "Inventario",
     items: [
       {
-        icon: <PackageSearch size={20} />,
-        path: "/panel/vendedor/inventario",
-        name: "Gestión de Inventario",
+        icon: <Package size={18} />,
+        path: "/panel/vendedor/inventario/productos",
+        name: "Productos",
         sublist: [
           {
-            icon: <Layers size={18} />,
+            icon: <Archive size={16} />,
             path: "/panel/vendedor/inventario/productos",
-            name: "Todos los Productos",
+            name: "Todos los productos",
           },
           {
-            icon: <FileInput size={18} />,
-            path: "/panel/vendedor/productos/importacion",
-            name: "Ingreso Full",
+            icon: <PackagePlus size={18} />, // Cambia el icono a uno que indique "importar/agregar"
+            path: "/panel/vendedor/inventario/importar-productos",
+            name: "Importar Productos",
+          },
+        ],
+      },
+      {
+        icon: <Inbox size={18} />,
+        path: "/panel/vendedor/inventario/solicitudes",
+        name: "Solicitudes",
+        sublist: [
+          {
+            icon: <Archive size={16} />,
+            path: "/panel/vendedor/inventario/solicitudes",
+            name: "Todas las solicitudes",
           },
           {
-            icon: <FilePlus2 size={18} />,
-            path: "/panel/vendedor/inventario/nuevo-producto",
-            name: "Agregar Producto",
+            icon: <PackagePlus size={16} />,
+            path: "/panel/vendedor/inventario/solicitudes/ingreso",
+            name: "Ingreso de inventario",
+          },
+          {
+            icon: <PackageMinus size={16} />,
+            path: "/panel/vendedor/inventario/solicitudes/egreso",
+            name: "Egreso de inventario",
           },
         ],
       },
     ],
   },
   {
-    title: "Gestión Comercial",
+    title: "Tienda",
     items: [
       {
-        icon: <Store size={20} />,
-        path: "/panel/vendedor/tienda",
-        name: "Mi Tienda",
-        sublist: [
-          {
-            icon: <ShoppingBag size={18} />,
-            path: "/panel/vendedor/tienda/publicaciones",
-            name: "Publicaciones",
-          },
-          {
-            icon: <Boxes size={18} />,
-            path: "/panel/vendedor/tienda/combos",
-            name: "Combos y Promos",
-          },
-          {
-            icon: <FilePlus2 size={18} />,
-            path: "/panel/vendedor/tienda/alta-rapida",
-            name: "Alta Rápida",
-          },
-        ],
+        icon: <ShoppingBag size={18} />,
+        path: "/panel/vendedor/tienda/publicaciones",
+        name: "Publicaciones",
       },
       {
-        icon: <TrendingUp size={20} />,
-        path: "/panel/vendedor/ventas",
-        name: "Ventas",
-        sublist: [
-          {
-            icon: <ClipboardList size={18} />,
-            path: "/panel/vendedor/ventas/pedidos",
-            name: "Pedidos",
-          },
-          /*           {
-            icon: <BarChart3 size={18} />,
-            path: "/panel/vendedor/ventas/estadisticas",
-            name: "Estadísticas",
-          }, */
-        ],
+        icon: <Boxes size={18} />,
+        path: "/panel/vendedor/tienda/combos",
+        name: "Combos y Promos",
+      },
+      {
+        icon: <ClipboardList size={18} />,
+        path: "/panel/vendedor/tienda/pedidos",
+        name: "Pedidos",
       },
     ],
   },
-  /*   {
-    title: "Marketing",
-    items: [
-      {
-        icon: <TrendingUp size={20} />,
-        path: "/panel/vendedor/promociones",
-        name: "Promociones",
-      },
-      {
-        icon: <BarChart3 size={20} />,
-        path: "/panel/vendedor/rendimiento",
-        name: "Rendimiento",
-      },
-    ],
-  }, */
 ];
 
 export default function SelletSidebar() {

@@ -7,8 +7,6 @@ export interface ProductTS {
   price: number;
   volumeType: number;
   weight: number;
-  category1: string;
-  category2: string;
   totalStock: number;
   status: ProductStatus;
 }

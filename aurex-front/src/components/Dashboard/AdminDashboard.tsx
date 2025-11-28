@@ -11,12 +11,14 @@ interface Props {
   title: string;
   children: React.ReactNode;
   requireActiveUser?: boolean;
+  breadcrumb?: { label: string; href: string }[];
 }
 
 export default function DashboardLayout({
   title,
   children,
   requireActiveUser = false,
+  breadcrumb = [],
 }: Props) {
   const { loading, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
@@ -33,7 +35,11 @@ export default function DashboardLayout({
       <div className="flex w-screen h-screen">
         <AdminSidebar />
         <div className="grow flex flex-col h-full bg-gray-200">
-          <Navbar title={title} />
+          <Navbar
+            title={title}
+            breadcrumb={breadcrumb}
+            homeHref="/panel/admin/dashboard"
+          />
           <div className="p-5 h-full overflow-y-auto flex items-center justify-center">
             <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center">
               <div className="mb-6">
@@ -77,7 +83,11 @@ export default function DashboardLayout({
     <div className="flex w-screen h-screen">
       <AdminSidebar />
       <div className="grow flex flex-col h-full bg-gray-200">
-        <Navbar title={title} />
+        <Navbar
+          title={title}
+          breadcrumb={breadcrumb}
+          homeHref="/panel/admin/dashboard"
+        />
         <div className="p-5 h-full overflow-y-auto">{children}</div>
       </div>
     </div>

@@ -12,7 +12,9 @@ interface SellerProfileFormProps {
   business: Business | null;
   editing: boolean;
   saving: boolean;
-  onCreateBusiness: (data: Omit<Business, 'id' | 'averageScore' | 'userId'>) => Promise<void>;
+  onCreateBusiness: (
+    data: Omit<Business, "id" | "averageScore" | "userId">
+  ) => Promise<void>;
   onEditClick: () => void;
   onCancelEdit: () => void;
   onSaveChanges: () => void;
@@ -35,10 +37,13 @@ export default function SellerProfileForm({
 }: SellerProfileFormProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const handleCreateBusiness = async (data: Omit<Business, 'id' | 'averageScore' | 'userId'>) => {
+  const handleCreateBusiness = async (
+    data: Omit<Business, "id" | "averageScore" | "userId">
+  ) => {
     await onCreateBusiness(data);
     setShowCreateModal(false);
   };
+  
   return (
     <Card className="h-full w-full">
       <CardHeader className="flex flex-row items-center justify-between pb-4">
@@ -108,22 +113,6 @@ export default function SellerProfileForm({
               onChange={onBusinessTextareaChange}
               disabled={saving}
             />
-            <div className="grid grid-cols-1 gap-3">
-              <Input
-                name="taxId"
-                label="RFC / Tax ID"
-                value={editedBusiness?.taxId || ""}
-                onChange={onBusinessDataChange}
-                disabled={saving}
-              />
-              <Input
-                name="bankAccount"
-                label="Cuenta bancaria"
-                value={editedBusiness?.bankAccount || ""}
-                onChange={onBusinessDataChange}
-                disabled={saving}
-              />
-            </div>
           </>
         ) : (
           <div className="space-y-2">
@@ -143,14 +132,6 @@ export default function SellerProfileForm({
                 </span>
               </div>
             )}
-            <div className="flex justify-between">
-              <span className="text-gray-600">RFC:</span>
-              <span className="font-medium">{business.taxId}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Cuenta bancaria:</span>
-              <span className="font-medium">{business.bankAccount}</span>
-            </div>
           </div>
         )}
       </CardContent>

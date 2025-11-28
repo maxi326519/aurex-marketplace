@@ -10,20 +10,40 @@ interface Column<T> {
   sortable?: boolean;
 }
 
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
 interface Props<T> {
   columns: Column<T>[];
   data: Array<T>;
+  enableInternalPagination?: boolean;
+  pagination?: PaginationInfo | null;
+  onPageChange?: (page: number) => void;
+  loading?: boolean;
 }
 
 type SortDirection = "asc" | "desc" | null;
 
-export default function Table<T>({ columns, data }: Props<T>) {
+export default function Table<T>({ 
+  columns, 
+  data, 
+  enableInternalPagination = true, 
+  pagination: externalPagination, 
+  onPageChange, 
+  loading = false 
+}: Props<T>) {
   const [sortConfig, setSortConfig] = useState<{
     key: string;
     direction: SortDirection;
   }>({ key: "", direction: null });
 
-  const pagination = usePagination(data);
+  const internalPagination = usePagination(data);
 
   // Función para manejar el ordenamiento
   const handleSort = (key: string) => {
@@ -72,7 +92,7 @@ export default function Table<T>({ columns, data }: Props<T>) {
   };
 
   return (
-    <div className="relative overflow-y-auto bg-white">
+    <div className="relative border border-border rounded-sm bg-white overflow-y-auto">
       <table className="w-full rounded-md bg-white">
         <thead className="sticky top-0 text-gray-500 bg-white z-10">
           <tr>
@@ -97,7 +117,19 @@ export default function Table<T>({ columns, data }: Props<T>) {
           </tr>
         </thead>
         <tbody>
-          {sortedData.length > 0 ? (
+          {loading ? (
+            <tr className="border-b border-gray-100">
+              <td
+                colSpan={columns.length}
+                className="py-8 text-center text-gray-500"
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                  Cargando...
+                </div>
+              </td>
+            </tr>
+          ) : sortedData.length > 0 ? (
             sortedData.map((row, rowIndex) => (
               <tr key={rowIndex} className="border-b border-gray-100">
                 {columns.map((column, colIndex) => (
@@ -123,7 +155,35 @@ export default function Table<T>({ columns, data }: Props<T>) {
           )}
         </tbody>
       </table>
-      <Pagination page={pagination.page} setPage={pagination.setPage} />
+      {enableInternalPagination && (
+        <Pagination page={internalPagination.page} setPage={internalPagination.setPage} />
+      )}
+      {!enableInternalPagination && externalPagination && onPageChange && (
+        <nav className="flex justify-between items-center border-t border-gray-100 px-4 py-2">
+          <div className="text-sm text-gray-600">
+            Mostrando {((externalPagination.page - 1) * externalPagination.limit) + 1} a {Math.min(externalPagination.page * externalPagination.limit, externalPagination.totalItems)} de {externalPagination.totalItems} resultados
+          </div>
+          <div className="flex items-center gap-[10px]">
+            <button
+              className="border-none text-gray-500 bg-white px-3 py-1 hover:bg-gray-200"
+              onClick={() => onPageChange(externalPagination.page - 1)}
+              disabled={!externalPagination.hasPrevPage}
+            >
+              {"<"}
+            </button>
+            <span>
+              {externalPagination.page} de {externalPagination.totalPages}
+            </span>
+            <button
+              className="border-none text-gray-500 bg-white px-3 py-1 hover:bg-gray-200"
+              onClick={() => onPageChange(externalPagination.page + 1)}
+              disabled={!externalPagination.hasNextPage}
+            >
+              {">"}
+            </button>
+          </div>
+        </nav>
+      )}
     </div>
   );
 }

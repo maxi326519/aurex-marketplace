@@ -86,7 +86,7 @@ const sections: SideSection[] = [
       {
         icon: <Package size={20} />,
         path: "/panel/admin/recepciones",
-        name: "Recepciones",
+        name: "Solicitudes",
         sublist: [
           {
             icon: <Clock size={20} />,

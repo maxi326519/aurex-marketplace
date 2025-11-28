@@ -184,11 +184,18 @@ export default function ProductDetails() {
               {/* Información del vendedor/producto */}
               {post.product && (
                 <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                  <h3 className="font-semibold mb-2">Información del producto</h3>
+                  <h3 className="font-semibold mb-2">
+                    Información del producto
+                  </h3>
                   <div className="text-sm space-y-1">
-                    <p><span className="font-medium">SKU:</span> {post.product.sku}</p>
-                    <p><span className="font-medium">Categoría:</span> {post.product.category1} - {post.product.category2}</p>
-                    <p><span className="font-medium">Stock disponible:</span> {post.product.totalStock}</p>
+                    <p>
+                      <span className="font-medium">SKU:</span>{" "}
+                      {post.product.sku}
+                    </p>
+                    <p>
+                      <span className="font-medium">Stock disponible:</span>{" "}
+                      {post.product.totalStock}
+                    </p>
                   </div>
                 </div>
               )}
@@ -201,7 +208,9 @@ export default function ProductDetails() {
 
               {/* Características */}
               <div className="mb-6">
-                <h2 className="text-lg font-semibold mb-3">Características principales</h2>
+                <h2 className="text-lg font-semibold mb-3">
+                  Características principales
+                </h2>
                 <div className="grid grid-cols-1 gap-2 text-sm">
                   <div className="flex justify-between py-1 border-b">
                     <span className="font-medium">Marca</span>
@@ -233,10 +242,15 @@ export default function ProductDetails() {
               {/* Otras características */}
               {post.otherFeatures && post.otherFeatures.length > 0 && (
                 <div className="mb-6">
-                  <h2 className="text-lg font-semibold mb-3">Otras características</h2>
+                  <h2 className="text-lg font-semibold mb-3">
+                    Otras características
+                  </h2>
                   <div className="space-y-2 text-sm">
                     {post.otherFeatures.map((feature, index) => (
-                      <div key={index} className="flex justify-between py-1 border-b">
+                      <div
+                        key={index}
+                        className="flex justify-between py-1 border-b"
+                      >
                         <span className="font-medium">{feature.name}</span>
                         <span>{feature.value}</span>
                       </div>
@@ -248,12 +262,16 @@ export default function ProductDetails() {
               {/* Preguntas Frecuentes */}
               {post.faq && post.faq.length > 0 && (
                 <div className="mb-6">
-                  <h2 className="text-lg font-semibold mb-3">Preguntas y respuestas</h2>
+                  <h2 className="text-lg font-semibold mb-3">
+                    Preguntas y respuestas
+                  </h2>
                   <div className="space-y-3">
                     {post.faq.map((item, index) => (
                       <div key={index} className="border rounded p-3">
                         <p className="font-medium text-sm">{item.name}</p>
-                        <p className="text-gray-700 text-sm mt-1">{item.value}</p>
+                        <p className="text-gray-700 text-sm mt-1">
+                          {item.value}
+                        </p>
                       </div>
                     ))}
                   </div>

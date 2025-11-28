@@ -206,7 +206,6 @@ export default function Search() {
                   description={post.content}
                   productInfo={{
                     sku: post.product?.sku,
-                    category: post.product?.category1,
                     stock: post.product?.totalStock,
                     status: post.product?.status,
                   }}

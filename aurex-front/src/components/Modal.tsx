@@ -1,13 +1,16 @@
 interface Props {
   title: string;
   children: React.ReactNode;
+  className?: string;
   onClose: () => void;
 }
 
-export default function Modal({ title, children, onClose }: Props) {
+export default function Modal({ title, children, className, onClose }: Props) {
   return (
     <div className="fixed z-[9999] top-0 left-0 flex justify-center items-center w-full h-full bg-[#0006] p-4">
-      <div className="flex flex-col rounded-lg bg-white w-full max-w-4xl max-h-[90vh] overflow-hidden">
+      <div
+        className={`flex flex-col rounded-lg bg-white w-full max-w-4xl max-h-[90vh] overflow-hidden ${className}`}
+      >
         <header className="flex flex-col gap-4 p-6 border-b border-gray-200">
           <div className="flex justify-between items-center">
             <h4 className="text-xl font-semibold">{title}</h4>
@@ -20,9 +23,7 @@ export default function Modal({ title, children, onClose }: Props) {
             </button>
           </div>
         </header>
-        <div className="flex-1 overflow-y-auto">
-          {children}
-        </div>
+        <div className="flex-1 overflow-y-auto">{children}</div>
       </div>
     </div>
   );

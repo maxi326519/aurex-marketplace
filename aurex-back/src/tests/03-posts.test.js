@@ -37,11 +37,9 @@ describe("Rutas de Publicaciones (Posts)", () => {
       sku: "TEST-SKU-001",
       name: "Producto de Prueba",
       description: "Descripción del producto de prueba",
-      price: 100.00,
+      price: 100.0,
       volumeType: 1,
       weight: 0.5,
-      category1: "Electrónicos",
-      category2: "Smartphones",
       totalStock: 50,
       status: "Publicado",
     });
@@ -66,7 +64,7 @@ describe("Rutas de Publicaciones (Posts)", () => {
         productId: testProduct.id,
         title: "Publicación de Prueba",
         content: "Esta es una publicación de prueba para testing",
-        price: 150.50,
+        price: 150.5,
       };
 
       const response = await request(app)
@@ -92,7 +90,7 @@ describe("Rutas de Publicaciones (Posts)", () => {
       const postData = {
         title: "Publicación sin producto",
         content: "Esta publicación no tiene productId",
-        price: 100.00,
+        price: 100.0,
       };
 
       const response = await request(app)
@@ -109,7 +107,7 @@ describe("Rutas de Publicaciones (Posts)", () => {
         productId: "00000000-0000-0000-0000-000000000000",
         title: "Producto Inexistente",
         content: "Esta publicación usa un productId que no existe",
-        price: 100.00,
+        price: 100.0,
       };
 
       const response = await request(app)
@@ -126,12 +124,10 @@ describe("Rutas de Publicaciones (Posts)", () => {
         productId: testProduct.id,
         title: "Publicación sin auth",
         content: "Esta publicación no tiene token",
-        price: 100.00,
+        price: 100.0,
       };
 
-      const response = await request(app)
-        .post("/api/posts")
-        .send(postData);
+      const response = await request(app).post("/api/posts").send(postData);
 
       expect(response.status).toBe(401);
     });
@@ -217,7 +213,7 @@ describe("Rutas de Publicaciones (Posts)", () => {
 
     it("debería combinar múltiples filtros", async () => {
       const response = await request(app)
-        .get("/api/posts?category1=Electrónicos&minPrice=100&maxPrice=200&status=Publicado")
+        .get("/api/posts?minPrice=100&maxPrice=200&status=Publicado")
         .set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
@@ -241,7 +237,7 @@ describe("Rutas de Publicaciones (Posts)", () => {
       const updateData = {
         title: "Título Actualizado",
         content: "Contenido actualizado de la publicación",
-        price: 200.00,
+        price: 200.0,
       };
 
       const response = await request(app)
@@ -279,7 +275,7 @@ describe("Rutas de Publicaciones (Posts)", () => {
         sku: "TEST-SKU-002",
         name: "Otro Producto de Prueba",
         description: "Descripción de otro producto",
-        price: 200.00,
+        price: 200.0,
         volumeType: 1,
         weight: 0.3,
         category1: "Hogar",
@@ -292,7 +288,7 @@ describe("Rutas de Publicaciones (Posts)", () => {
         productId: anotherProduct.id,
         title: "Nuevo Producto Asociado",
         content: "Publicación actualizada con nuevo producto",
-        price: 300.00,
+        price: 300.0,
       };
 
       const response = await request(app)
@@ -316,7 +312,10 @@ describe("Rutas de Publicaciones (Posts)", () => {
         .set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty("message", "Post deleted successfully");
+      expect(response.body).toHaveProperty(
+        "message",
+        "Post deleted successfully"
+      );
 
       // Verificar que la publicación fue eliminada
       const deletedPost = await Post.findByPk(testPost.id);
@@ -342,7 +341,7 @@ describe("Rutas de Publicaciones (Posts)", () => {
         request(app).delete("/api/posts/test-id"),
       ]);
 
-      responses.forEach(response => {
+      responses.forEach((response) => {
         expect(response.status).toBe(401);
       });
     });
@@ -356,4 +355,3 @@ describe("Rutas de Publicaciones (Posts)", () => {
     });
   });
 });
-

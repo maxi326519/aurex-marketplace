@@ -3,22 +3,33 @@ import { MovementsType } from "../../interfaces/MovementTS";
 import { setMovements } from "../controllers/movements";
 import { ProductTS } from "../../interfaces/ProductTS";
 import { StockTS } from "../../interfaces/StockTS";
+import { Transaction } from "sequelize";
 
-const createStock = async (stock: StockTS, userId: string) => {
+const createStock = async (
+  stock: StockTS,
+  userId: string,
+  transaction?: Transaction
+) => {
   // Create a new stock register
-  const newStock: any = await Stock.create({ ...stock });
+  const newStock: any = await Stock.create(
+    { ...stock },
+    { transaction }
+  );
 
   // Bind the new stock with the product
-  const product = await Product.findByPk(stock.ProductId);
+  const product = await Product.findByPk(stock.ProductId, { transaction });
   if (!product) throw new Error("Product not found");
-  await newStock.setProduct(product);
+  await newStock.setProduct(product, { transaction });
 
   // Update product amount
-  await product.update({
-    totalStock:
-      Number((product.dataValues as ProductTS).totalStock) +
-      Number(stock.amount),
-  });
+  await product.update(
+    {
+      totalStock:
+        Number((product.dataValues as ProductTS).totalStock) +
+        Number(stock.amount),
+    },
+    { transaction }
+  );
 
   // Create the movement
   const newMovement = await setMovements(
@@ -26,9 +37,10 @@ const createStock = async (stock: StockTS, userId: string) => {
     MovementsType.entrada,
     stock.amount,
     newStock.dataValues.id,
-    "",
+    stock.StorageId || "",
     (product.dataValues as ProductTS).id,
-    userId
+    userId,
+    transaction
   );
 
   /* 

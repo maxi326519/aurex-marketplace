@@ -95,8 +95,6 @@ router.get("/", async (req: Request, res: Response) => {
     const filters = {
       marketplace: req.query.marketplace === "true",
       title: req.query.title as string,
-      category1: req.query.category1 as string,
-      category2: req.query.category2 as string,
       minPrice: req.query.minPrice
         ? parseFloat(req.query.minPrice as string)
         : undefined,

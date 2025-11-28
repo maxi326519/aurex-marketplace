@@ -21,7 +21,10 @@ const verificarToken = (req: Request, res: Response, next: NextFunction) => {
     // Decode info in th token
     const decoded = jwt.verify(token, secretKey);
 
-    // Add user data to req with the next function
+    // Add user data to req.user (for multer and other middlewares that need it before body parsing)
+    (req as any).user = decoded;
+    
+    // Add user data to req.body.user (for routes that need it in body)
     req.body.user = decoded;
 
     next();

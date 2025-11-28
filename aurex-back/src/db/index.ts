@@ -14,6 +14,12 @@ const options: any = {
   database: DB_NAME,
   logging: false,
   native: false,
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000,
+  },
 };
 
 const sequelize = new Sequelize(options);
@@ -57,7 +63,7 @@ export const {
   Post,
   Order,
   OrderItem,
-  Reception,
+  MovementOrder,
   Report,
   Review,
   Chat,
@@ -73,7 +79,7 @@ User.hasMany(Message); // Usuario que envía mensajes
 
 Business.belongsTo(User);
 Business.hasMany(Movements);
-Business.hasMany(Reception);
+Business.hasMany(MovementOrder);
 Business.hasMany(PaymentOptions);
 Business.hasMany(Product);
 Business.hasMany(Post);
@@ -105,10 +111,12 @@ Movements.belongsTo(Business); // Movement pertenece a un Business
 Movements.belongsTo(Storage);
 Movements.belongsTo(Stock);
 Movements.belongsTo(Product);
+Movements.belongsTo(MovementOrder); // Movement pertenece a un MovementOrder
 
 PaymentOptions.belongsTo(Business); // PaymentOptions pertenece a un Business
 
-Reception.belongsTo(Business); // Reception pertenece a un Business
+MovementOrder.belongsTo(Business); // MovementOrder pertenece a un Business
+MovementOrder.hasMany(Movements); // MovementOrder tiene muchos Movements
 
 Order.belongsTo(User); // Usuario que crea la orden
 Order.belongsTo(Business); // Business dueño de los productos

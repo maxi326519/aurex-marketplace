@@ -1,57 +1,64 @@
 import { Download, FileSpreadsheet } from "lucide-react";
-import { ReceptionStatus } from "../../../../interfaces/Receptions";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import useReceptions from "../../../../hooks/Dashboard/receptions/useReceptions";
+import {
+  MovementOrderStatus,
+  MovementOrderType,
+} from "../../../../interfaces/MovementOrders";
+import useMovementOrders from "../../../../hooks/Dashboard/movementOrders/useMovementOrders";
 
 import DashboardLayout from "../../../../components/Dashboard/SellerDashboard";
 import DragAndDrop from "../../../../components/Excel/DragAndDrop";
 import ViewCSV from "../../../../components/Excel/ViewCSV";
 import Button from "../../../../components/ui/Button";
-import Modal from "../../../../components/Modal";
 
-export default function SellersImportsPage() {
-  const receptions = useReceptions();
-  const [openModal, setOpenModal] = useState<boolean>(false);
+export default function SellersEgressPage() {
+  const navigate = useNavigate();
+  const movementOrders = useMovementOrders();
   const [productsFile, setProductsFile] = useState<File>();
-  const [remittanceFile, setRemittanceFile] = useState<File | null>(null);
 
   async function handleSubmit() {
-    if (productsFile && remittanceFile) {
-      await receptions.pendings.create(
+    if (productsFile) {
+      // Para egresos solo se requiere el Excel, no el remito
+      await movementOrders.pendings.create(
         {
           date: new Date(),
-          state: ReceptionStatus.PENDING,
+          type: MovementOrderType.SALIDA,
+          state: MovementOrderStatus.PENDING,
           sheetFile: "",
           remittance: "",
         },
         productsFile,
-        remittanceFile
+        null // No se requiere remito para egresos
       );
+      // Reset form and navigate back
+      setProductsFile(undefined);
+      navigate("/panel/vendedor/productos/ordenes");
     }
   }
 
   function downloadExcel() {
-    // ruta relativa al directorio public/
     const fileUrl = `/modelo-excel.xlsx`;
-
-    // crear link temporal
     const link = document.createElement("a");
     link.href = fileUrl;
     link.download = fileUrl;
-
-    // forzar clic y eliminar
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   }
 
-  function handleSetRemittance(file: File) {
-    setRemittanceFile(file);
-    setOpenModal(false);
-  }
+  const breadcrumb = [
+    { label: "Inventario" },
+    { label: "Solicitudes", path: "/panel/vendedor/inventario/solicitudes" },
+    { label: "Nuevo Egreso" },
+  ];
 
   return (
-    <DashboardLayout title="Productos / Importación" requireActiveUser={true}>
+    <DashboardLayout
+      title="Nuevo Egreso"
+      breadcrumb={breadcrumb}
+      requireActiveUser={true}
+    >
       {productsFile && (
         <div className="flex gap-4 pb-4 border-b border-gray-300">
           <div
@@ -70,26 +77,11 @@ export default function SellersImportsPage() {
             </span>
           </div>
           <div
-            className={`flex-1 grow flex flex-col justify-center items-center p-2 rounded-sm border border-primary text-primary ${
-              remittanceFile ? "text-white bg-primary" : ""
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <b className="flex justify-center items-center w-4 h-4 rounded-full text-xs text-primary bg-white">
-                2
-              </b>{" "}
-              Subir Remito
-            </span>
-            <span className="text-gray-400 text-xs">
-              {remittanceFile ? remittanceFile.name : ""}
-            </span>
-          </div>
-          <div
             className={`flex-1 grow flex flex-col justify-center items-center p-2 rounded-sm border border-primary text-primary`}
           >
             <span className="flex items-center gap-2">
               <b className="flex justify-center items-center w-4 h-4 rounded-full text-xs text-primary bg-white">
-                3
+                2
               </b>{" "}
               Confirmar datos
             </span>
@@ -98,24 +90,16 @@ export default function SellersImportsPage() {
       )}
       {productsFile ? (
         <div>
-          {openModal && (
-            <Modal title="Subir Remito" onClose={() => setOpenModal(false)}>
-              <DragAndDrop
-                setFile={handleSetRemittance}
-                allowedTypes={["pdf"]}
-              />
-            </Modal>
-          )}
           <ViewCSV
             file={productsFile}
-            remito={remittanceFile}
-            onSubmitRemittance={() => setOpenModal(true)}
+            remito={null}
+            onSubmitRemittance={() => {}}
             onSubmit={() => handleSubmit()}
             onBack={() => {
-              setRemittanceFile(null);
               setProductsFile(undefined);
             }}
-            onClose={() => {}}
+            onClose={() => navigate("/panel/vendedor/productos/ordenes")}
+            requireRemittance={false}
           />
         </div>
       ) : (

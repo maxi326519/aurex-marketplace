@@ -6,12 +6,16 @@ export interface Product {
   sku: string;
   name: string;
   price: number;
-  volumeType: "Chico" | "Mediano" | "Grande";
+  volumeType: VolumeType;
   weight: number;
-  category1: string;
-  category2: string;
   totalStock: number;
   status: ProductStatus;
+}
+
+export enum VolumeType {
+  "Chico",
+  "Mediano",
+  "Grande",
 }
 
 export enum ProductStatus {
@@ -41,10 +45,8 @@ export const initProduct = (): Product => ({
   sku: "",
   name: "",
   price: 0,
-  volumeType: "Chico",
+  volumeType: 0,
   weight: 0,
-  category1: "",
-  category2: "",
   totalStock: 0,
   status: ProductStatus.HIDDEN,
 });

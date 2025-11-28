@@ -1,13 +1,30 @@
 import { Category, Product } from "../../../interfaces/Product";
+import { PaginationInfo } from "../../../components/Dashboard/Table/Table";
 import { create } from "zustand";
+
+interface LoadingState {
+  get: boolean;
+  create: boolean;
+  update: boolean;
+  delete: boolean;
+  search: boolean;
+}
 
 interface ProductsState {
   data: Product[];
   categories: Category[];
-  loading: boolean;
-  setLoading: (loading: boolean) => void;
+  pagination: PaginationInfo | null;
+  loading: LoadingState;
+  search: string;
+  filters: {
+    status: string;
+  };
+  setLoading: (key: keyof LoadingState, value: boolean) => void;
   setProducts: (products: Product[]) => void;
   setCategories: (categories: Category[]) => void;
+  setPagination: (pagination: PaginationInfo | null) => void;
+  setSearch: (search: string) => void;
+  setFilters: (filters: { status: string }) => void;
   addProduct: (product: Product) => void;
   updateProduct: (product: Product) => void;
   removeProduct: (productId: string) => void;
@@ -18,11 +35,27 @@ interface ProductsState {
 export const useProductsStore = create<ProductsState>((set) => ({
   data: [],
   categories: [],
-  suppliers: [],
-  loading: false,
-  setLoading: (loading) => set({ loading }),
+  pagination: null,
+  loading: {
+    get: false,
+    create: false,
+    update: false,
+    delete: false,
+    search: false,
+  },
+  search: "",
+  filters: {
+    status: "",
+  },
+  setLoading: (key, value) =>
+    set((state) => ({
+      loading: { ...state.loading, [key]: value },
+    })),
   setProducts: (products) => set({ data: products }),
   setCategories: (categories) => set({ categories }),
+  setPagination: (pagination) => set({ pagination }),
+  setSearch: (search) => set({ search }),
+  setFilters: (filters) => set({ filters }),
   addProduct: (product) =>
     set((state) => ({
       data: [...state.data, product],

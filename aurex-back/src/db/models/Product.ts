@@ -33,14 +33,6 @@ export const model = (sequelize: any, DataTypes: any) => {
         allowNull: false,
         defaultValue: 0,
       },
-      category1: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      category2: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
       totalStock: {
         type: DataTypes.FLOAT,
         allowNull: false,

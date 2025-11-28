@@ -40,21 +40,19 @@ const useCartStore = create<CartState>((set, get) => ({
 
   addItem: (post: Post) => {
     const { items } = get();
-    const existingItem = items.find(item => item.id === post.id);
-    
+    const existingItem = items.find((item) => item.id === post.id);
+
     if (existingItem) {
       // Si ya existe, incrementar cantidad
       set((state) => ({
-        items: state.items.map(item =>
-          item.id === post.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
+        items: state.items.map((item) =>
+          item.id === post.id ? { ...item, quantity: item.quantity + 1 } : item
         ),
       }));
     } else {
       // Si no existe, agregar nuevo item
       const newItem: CartItem = {
-        id: post.id || '',
+        id: post.id || "",
         title: post.title,
         price: post.price,
         image: post.product?.name || "Producto",
@@ -64,23 +62,22 @@ const useCartStore = create<CartState>((set, get) => ({
         quantity: 1,
         productInfo: {
           sku: post.product?.sku,
-          category: post.product?.category1,
           stock: post.product?.totalStock,
           status: post.product?.status,
         },
       };
-      
+
       set((state) => ({
         items: [...state.items, newItem],
       }));
     }
-    
+
     Swal.fire("Agregado", "Producto agregado al carrito", "success");
   },
 
   removeItem: (id: string) => {
     set((state) => ({
-      items: state.items.filter(item => item.id !== id),
+      items: state.items.filter((item) => item.id !== id),
     }));
   },
 
@@ -89,9 +86,9 @@ const useCartStore = create<CartState>((set, get) => ({
       get().removeItem(id);
       return;
     }
-    
+
     set((state) => ({
-      items: state.items.map(item =>
+      items: state.items.map((item) =>
         item.id === id ? { ...item, quantity } : item
       ),
     }));
@@ -106,7 +103,10 @@ const useCartStore = create<CartState>((set, get) => ({
   },
 
   getTotalAmount: () => {
-    return get().items.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return get().items.reduce(
+      (total, item) => total + item.price * item.quantity,
+      0
+    );
   },
 
   createOrder: async (userId?: string) => {
@@ -121,7 +121,7 @@ const useCartStore = create<CartState>((set, get) => ({
 
     try {
       const firstBusinessId = get().getFirstBusinessId();
-      
+
       const orderData = {
         date: new Date(),
         status: OrdersStatus.PENDING,
@@ -130,7 +130,7 @@ const useCartStore = create<CartState>((set, get) => ({
         supplier: "Cliente", // Por ahora hardcodeado
         userId: userId, // Usuario que crea la orden
         businessId: firstBusinessId, // Business dueño de los productos
-        items: items.map(item => ({
+        items: items.map((item) => ({
           productId: item.productId,
           quantity: item.quantity,
           price: item.price,
@@ -140,7 +140,11 @@ const useCartStore = create<CartState>((set, get) => ({
       const response = await axios.post("/orders", orderData);
 
       if (response.status === 201) {
-        Swal.fire("¡Compra realizada!", "Tu orden ha sido creada exitosamente", "success");
+        Swal.fire(
+          "¡Compra realizada!",
+          "Tu orden ha sido creada exitosamente",
+          "success"
+        );
         get().clear();
       }
     } catch (error) {

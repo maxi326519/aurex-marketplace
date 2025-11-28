@@ -71,9 +71,36 @@ async function createUsers() {
 }
 
 async function loadData(): Promise<void> {
-  console.log("Creating tables...");
+  console.log("Dropping all tables (ignoring constraints)...");
+  
+  // Desactivar verificaciones de foreign keys para poder eliminar todo sin problemas
+  await conn.query("SET FOREIGN_KEY_CHECKS = 0;");
+  
+  try {
+    // Eliminar todas las tablas
+    await conn.drop();
+  } catch (error: any) {
+    // Si falla, intentar eliminar tablas manualmente
+    console.log("Attempting alternative drop method...");
+    const [results] = await conn.query(
+      "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE()"
+    ) as any[];
+    
+    for (const row of results) {
+      try {
+        await conn.query(`DROP TABLE IF EXISTS \`${row.TABLE_NAME}\`;`);
+      } catch (dropError: any) {
+        console.log(`Could not drop table ${row.TABLE_NAME}:`, dropError.message);
+      }
+    }
+  }
+  
+  // Reactivar verificaciones de foreign keys
+  await conn.query("SET FOREIGN_KEY_CHECKS = 1;");
 
-  await conn.sync({ force: true });
+  console.log("Creating tables...");
+  // Crear todas las tablas desde cero
+  await conn.sync({ force: false });
 
   await createUsers();
 }

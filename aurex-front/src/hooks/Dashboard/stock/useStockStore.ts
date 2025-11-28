@@ -1,21 +1,52 @@
 import { create } from "zustand";
-import { Stock } from "../../../interfaces/Product";
+import { Stock, Product } from "../../../interfaces/Product";
+import { PaginationInfo } from "../../../components/Dashboard/Table/Table";
+
+export interface ProductWithStock extends Product {
+  Stocks?: Stock[];
+}
 
 interface StockState {
   data: Stock[];
-  loading: boolean;
-  setLoading: (loading: boolean) => void;
+  productsWithStock: ProductWithStock[];
+  pagination: PaginationInfo | null;
+  movements: any[];
+  loading: {
+    get: boolean;
+    create: boolean;
+    update: boolean;
+    delete: boolean;
+    getProducts: boolean;
+    getMovements: boolean;
+  };
+  setLoading: (key: keyof StockState["loading"], value: boolean) => void;
   setStocks: (stocks: Stock[]) => void;
   addStock: (stock: Stock) => void;
   updateStock: (stock: Stock) => void;
   removeStock: (id: string) => void;
+  setProductsWithStock: (products: ProductWithStock[]) => void;
+  setPagination: (pagination: PaginationInfo | null) => void;
+  setMovements: (movements: any[]) => void;
 }
 
 // Store de Zustand
 const useStockStore = create<StockState>((set) => ({
   data: [],
-  loading: false,
-  setLoading: (loading) => set({ loading }),
+  productsWithStock: [],
+  pagination: null,
+  movements: [],
+  loading: {
+    get: false,
+    create: false,
+    update: false,
+    delete: false,
+    getProducts: false,
+    getMovements: false,
+  },
+  setLoading: (key, value) =>
+    set((state) => ({
+      loading: { ...state.loading, [key]: value },
+    })),
   setStocks: (stocks) => set({ data: stocks }),
   addStock: (stock) => set((state) => ({ data: [...state.data, stock] })),
   updateStock: (stock) =>
@@ -26,6 +57,9 @@ const useStockStore = create<StockState>((set) => ({
     set((state) => ({
       data: state.data.filter((s) => s.id !== id),
     })),
+  setProductsWithStock: (products) => set({ productsWithStock: products }),
+  setPagination: (pagination) => set({ pagination }),
+  setMovements: (movements) => set({ movements }),
 }));
 
 export default useStockStore;

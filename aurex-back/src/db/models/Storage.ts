@@ -10,7 +10,6 @@ export const model = (sequelize: any, DataTypes: any) => {
       rag: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
       },
       site: {
         type: DataTypes.STRING,
@@ -33,6 +32,16 @@ export const model = (sequelize: any, DataTypes: any) => {
         defaultValue: false,
       },
     },
-    { updatedAt: false, timestamps: false }
+    {
+      updatedAt: false,
+      timestamps: false,
+      indexes: [
+        {
+          unique: true,
+          name: "unique_rag_site",
+          fields: ["rag", "site"],
+        },
+      ],
+    }
   );
 };

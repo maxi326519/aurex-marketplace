@@ -6,8 +6,6 @@ interface MarketplacePostsState {
   loading: boolean;
   filters: {
     title?: string;
-    category1?: string;
-    category2?: string;
     minPrice?: number;
     maxPrice?: number;
     status?: string;
@@ -41,16 +39,6 @@ export const useMarketplacePostsStore = create<MarketplacePostsState>((set, get)
     return posts.filter(post => {
       // Filtro por título
       if (filters.title && !post.title.toLowerCase().includes(filters.title.toLowerCase())) {
-        return false;
-      }
-      
-      // Filtro por categoría 1
-      if (filters.category1 && post.product?.category1 !== filters.category1) {
-        return false;
-      }
-      
-      // Filtro por categoría 2
-      if (filters.category2 && post.product?.category2 !== filters.category2) {
         return false;
       }
       
